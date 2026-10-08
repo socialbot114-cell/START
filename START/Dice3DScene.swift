@@ -112,7 +112,7 @@ private enum DiceGeometry {
 
         let key = SCNLight()
         key.type = .omni
-        key.intensity = 1050
+        key.intensity = 540
         key.color = UIColor(red: 1.0, green: 0.82, blue: 0.57, alpha: 1)
         let keyNode = SCNNode()
         keyNode.light = key
@@ -121,7 +121,7 @@ private enum DiceGeometry {
 
         let fill = SCNLight()
         fill.type = .omni
-        fill.intensity = 520
+        fill.intensity = 260
         fill.color = UIColor(red: 0.50, green: 0.78, blue: 1.0, alpha: 1)
         let fillNode = SCNNode()
         fillNode.light = fill
@@ -130,7 +130,7 @@ private enum DiceGeometry {
 
         let rim = SCNLight()
         rim.type = .directional
-        rim.intensity = 650
+        rim.intensity = 420
         rim.color = gold
         let rimNode = SCNNode()
         rimNode.light = rim
@@ -139,7 +139,7 @@ private enum DiceGeometry {
 
         let ambient = SCNLight()
         ambient.type = .ambient
-        ambient.intensity = 270
+        ambient.intensity = 150
         ambient.color = UIColor(white: 0.48, alpha: 1)
         let ambientNode = SCNNode()
         ambientNode.light = ambient
@@ -162,8 +162,10 @@ private enum DiceGeometry {
     }
 
     static func orientation(for face: PolyFace) -> simd_quatf {
-        let target = SIMD3<Float>(0, 0, 1)
-        return simd_quatf(from: face.normal, to: target)
+        let cameraFacing = simd_quatf(from: face.normal, to: SIMD3<Float>(0, 0, 1))
+        let revealSideFaces = simd_quatf(angle: .pi / 8, axis: SIMD3<Float>(1, 0, 0))
+            * simd_quatf(angle: -.pi / 8, axis: SIMD3<Float>(0, 1, 0))
+        return revealSideFaces * cameraFacing
     }
 
     static func animate(_ node: SCNNode, to face: PolyFace) {
@@ -331,8 +333,8 @@ private enum DiceGeometry {
             let geometry = SCNGeometry(sources: [source, normalSource], elements: [element])
             let material = SCNMaterial()
             material.diffuse.contents = faceColors[faceIndex % faceColors.count]
-            material.metalness.contents = 0.48
-            material.roughness.contents = 0.24
+            material.metalness.contents = 0.28
+            material.roughness.contents = 0.34
             material.specular.contents = UIColor.white
             material.lightingModel = .physicallyBased
             material.isDoubleSided = false

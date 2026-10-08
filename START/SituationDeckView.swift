@@ -19,7 +19,7 @@ struct SituationDeckView: View {
             TableBackground()
             ScrollView {
                 VStack(spacing: 12) {
-                    AppScreenHeader(title: "Quem combina?") { dismiss() }
+                    AppScreenHeader(title: "Situações") { dismiss() }
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("BARALHO DA MESA")

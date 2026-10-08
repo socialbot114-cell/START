@@ -12,7 +12,7 @@ struct FingerPickerView: View {
             TableBackground()
             ScrollView {
                 VStack(spacing: 13) {
-                    AppScreenHeader(title: "Finger picker") { dismiss() }
+                    AppScreenHeader(title: "Dedos") { dismiss() }
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("TODO MUNDO AO MESMO TEMPO")

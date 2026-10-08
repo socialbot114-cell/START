@@ -14,7 +14,7 @@ struct CardsView: View {
             TableBackground()
             ScrollView {
                 VStack(spacing: 13) {
-                    AppScreenHeader(title: "Carta mais alta") { dismiss() }
+                    AppScreenHeader(title: "Carta alta") { dismiss() }
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("O BARALHO DECIDE")
