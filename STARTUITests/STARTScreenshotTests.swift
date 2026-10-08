@@ -36,11 +36,11 @@ final class STARTScreenshotTests: XCTestCase {
 
     func testScreenshots() throws {
         XCTAssertTrue(app.staticTexts["Todo jogo tem uma grande história."].waitForExistence(timeout: 10))
+        shot("01-home")
         XCTAssertTrue(app.buttons["mode-dice"].isHittable)
         XCTAssertTrue(app.buttons["mode-finger"].isHittable)
         XCTAssertTrue(app.buttons["mode-cards"].isHittable)
         XCTAssertTrue(app.buttons["mode-situations"].isHittable)
-        shot("01-home")
 
         app.buttons["start-title"].tap()
         XCTAssertTrue(app.staticTexts["Como vamos descobrir quem começa?"].waitForExistence(timeout: 5))

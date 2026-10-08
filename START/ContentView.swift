@@ -20,7 +20,7 @@ struct ContentView: View {
             ZStack {
                 TableBackground()
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 15) {
+                    VStack(alignment: .leading, spacing: 9) {
                         homeHeader
                         hero
 
@@ -57,11 +57,10 @@ struct ContentView: View {
                             modeLink(.situations, symbol: "rectangle.stack.fill", title: "Cartas de situação", subtitle: "Quem combina?", number: "04", id: "mode-situations")
                         }
 
-                        playerSummary
                     }
                     .padding(.horizontal, 18)
-                    .padding(.top, 12)
-                    .padding(.bottom, 22)
+                    .padding(.top, 4)
+                    .padding(.bottom, 10)
                     .frame(maxWidth: 560)
                     .frame(maxWidth: .infinity)
                 }
@@ -98,11 +97,11 @@ struct ContentView: View {
     private var homeHeader: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 0) {
-                StartLogo()
-                    .frame(height: 50, alignment: .leading)
+                StartLogo(compact: true)
+                    .frame(height: 39, alignment: .leading)
                 Text("YOUR BOARD GAME COMPANION")
-                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                    .tracking(2.1)
+                    .font(.system(size: 7, weight: .bold, design: .rounded))
+                    .tracking(1.8)
                     .foregroundColor(Theme.mutedText)
                     .padding(.leading, 3)
             }
@@ -120,22 +119,22 @@ struct ContentView: View {
     }
 
     private var hero: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 3) {
             Text("Todo jogo tem uma grande história.")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(size: 17, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
                 .fixedSize(horizontal: false, vertical: true)
             Text("E ela sempre começa por alguém.")
-                .font(.system(size: 21, weight: .heavy, design: .rounded))
+                .font(.system(size: 16, weight: .heavy, design: .rounded))
                 .foregroundColor(Theme.accent)
                 .fixedSize(horizontal: false, vertical: true)
             Text("Decida quem começa. Rápido, divertido e sem internet.")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(size: 10, weight: .medium, design: .rounded))
                 .foregroundColor(.white.opacity(0.75))
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 2)
+                .padding(.top, 1)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 0)
         .accessibilityIdentifier("home-header")
     }
 
@@ -192,34 +191,34 @@ struct ModeTile: View {
     let number: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 5) {
             HStack(alignment: .top) {
                 Image(systemName: symbol)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(Theme.accent)
-                    .frame(width: 37, height: 37)
-                    .background(Theme.accent.opacity(0.13), in: RoundedRectangle(cornerRadius: 12))
+                    .frame(width: 31, height: 31)
+                    .background(Theme.accent.opacity(0.13), in: RoundedRectangle(cornerRadius: 10))
                 Spacer()
                 Text(number)
-                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                    .font(.system(size: 8, weight: .heavy, design: .rounded))
                     .tracking(1)
                     .foregroundColor(.white.opacity(0.42))
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Text(subtitle)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .font(.system(size: 9, weight: .medium, design: .rounded))
                     .foregroundColor(Theme.mutedText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 91, alignment: .leading)
+        .padding(9)
+        .frame(maxWidth: .infinity, minHeight: 73, alignment: .leading)
         .background(
             LinearGradient(colors: [Color.black.opacity(0.76), Theme.cardRaised.opacity(0.88)], startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 16)
