@@ -28,5 +28,6 @@ struct STARTApp: App {
         let screenSize = scene.screen.bounds.size
         scene.sizeRestrictions?.minimumSize = screenSize
         scene.sizeRestrictions?.maximumSize = screenSize
+        scene.windows.first?.frame = scene.screen.bounds
     }
 }
