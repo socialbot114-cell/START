@@ -11,10 +11,9 @@ MVP nativo para iOS, feito em SwiftUI e utilizável offline. A linguagem visual 
 
 ## Revisão visual pelo GitHub Actions
 
-O workflow **iOS build + visual review** roda no simulador de iPhone e publica o artefato `START-visual-review` com:
+O workflow **iOS build + visual review** roda no simulador de iPhone e publica dois artefatos separados para facilitar a revisão:
 
-- PNG de cada tela, em resolução do simulador;
-- `START-contact-sheet.png` com todas as telas numa montagem;
-- `START-session.mp4` com a navegação e a rolagem 3D do dado.
+- `START-prints`: PNG de cada tela em resolução do simulador e `START-contact-sheet.png` com a montagem geral;
+- `START-dice-preview`: vídeo `START-session.mp4` com a navegação e a rolagem 3D do dado.
 
 O modo de screenshot usa um resultado controlado para facilitar a revisão; o app normal continua sorteando aleatoriamente.

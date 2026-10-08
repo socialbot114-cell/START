@@ -46,11 +46,11 @@ jobs:
             build
 
       - name: Prepare visual-review folder
-        run: mkdir -p visual-review/screenshots
+        run: mkdir -p visual-review/screenshots visual-review/video
 
       - name: Record simulator preview
         run: |
-          xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/START-session.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
+          xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/video/START-session.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/start-video.pid"
           sleep 2
 
@@ -97,13 +97,25 @@ jobs:
             swift Scripts/make_contact_sheet.swift visual-review/screenshots visual-review/START-contact-sheet.png
           fi
 
-      - name: Upload visual review bundle
+      - name: Upload screenshots and contact sheet
         if: always()
-        id: upload-review
+        id: upload-screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: START-visual-review
-          path: visual-review/
+          name: START-prints
+          path: |
+            visual-review/screenshots/
+            visual-review/START-contact-sheet.png
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload simulator video
+        if: always()
+        id: upload-video
+        uses: actions/upload-artifact@v4
+        with:
+          name: START-dice-preview
+          path: visual-review/video/START-session.mp4
           if-no-files-found: warn
           retention-days: 14
 
@@ -111,7 +123,8 @@ jobs:
         if: always()
         run: |
           echo '## START — revisão visual' >> "$GITHUB_STEP_SUMMARY"
-          echo '[Baixar prints, montagem geral e vídeo da rolagem 3D](${{ steps.upload-review.outputs.artifact-url }})' >> "$GITHUB_STEP_SUMMARY"
+          echo '- [Baixar prints individuais e montagem geral](${{ steps.upload-screenshots.outputs.artifact-url }})' >> "$GITHUB_STEP_SUMMARY"
+          echo '- [Baixar vídeo da sessão no simulador](${{ steps.upload-video.outputs.artifact-url }})' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload build and UI test logs
         if: always()
