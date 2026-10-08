@@ -74,14 +74,7 @@ jobs:
           if [ -n "$XCRESULT" ]; then
             echo "Exporting attachments via xcresulttool..."
             xcrun xcresulttool get --path "$XCRESULT" --format json > /tmp/result.json || true
-            python3 - <<'PY' || true
-import json, subprocess, os
-try:
-    d = json.load(open('/tmp/result.json'))
-    print('xcresult json loaded')
-except Exception as e:
-    print('json load failed', e)
-PY
+            python3 -c "import json; d=json.load(open('/tmp/result.json')); print('xcresult json ok')" || true
             xcrun xcresulttool export object --legacy --type directory --path "$XCRESULT" --output-path exported || xcrun xcresulttool export --legacy --type directory --path "$XCRESULT" --output-path exported || true
             find exported -type f | head -n 100 || true
             find exported -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -exec cp {} shots/ \; || true
