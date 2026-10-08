@@ -5,3 +5,4 @@ build/
 shots/
 .DS_Store
 reference-mockup.jpeg
+*.jpeg
