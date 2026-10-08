@@ -1,0 +1,103 @@
+name: iOS build + screenshots
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-shots:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: |
+          ls /Applications | grep -i xcode || true
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer || sudo xcode-select -p
+          xcodebuild -version
+          xcrun simctl list devices | head -n 60
+
+      - name: Boot iPhone simulator
+        run: |
+          UDID=$(xcrun simctl list devices -j | python3 -c "import json,sys; d=json.load(sys.stdin); cands=[x for devs in d['devices'].values() for x in devs if 'iPhone 16' in x.get('name','') and x.get('isAvailable',True)]; print(cands[0]['udid'] if cands else '')")
+          echo "UDID=$UDID"
+          if [ -z "$UDID" ]; then
+            echo "No iPhone 16 found, listing runtimes"
+            xcrun simctl list devicetypes | head -n 40
+            exit 1
+          fi
+          echo "UDID=$UDID" >> $GITHUB_ENV
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b || true
+
+      - name: Build for simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project START.xcodeproj \
+            -scheme START \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
+            build | xcpretty || xcodebuild \
+            -project START.xcodeproj \
+            -scheme START \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Run UI tests (captures screenshots)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project START.xcodeproj \
+            -scheme START \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath DerivedData \
+            -only-testing:STARTUITests/STARTScreenshotTests/testScreenshots \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
+            test | tee xcodebuild-test.log || true
+          echo "---- tail log ----"
+          tail -n 200 xcodebuild-test.log || true
+
+      - name: Collect screenshots
+        if: always()
+        run: |
+          mkdir -p shots
+          echo "Searching DerivedData for screenshots..."
+          find DerivedData -type f -name "*.png" | head -n 100 || true
+          find DerivedData -type f -name "*.png" -exec cp {} shots/ \; || true
+          echo "Searching for XCT attachments..."
+          find ~/Library/Developer/Xcode/DerivedData -type f -name "*.png" -newer START.xcodeproj 2>/dev/null | head -n 20 || true
+          ls -la shots || true
+          # Fallback: direct simctl capture of home screen if UI tests failed
+          if [ -z "$(ls -A shots 2>/dev/null)" ]; then
+            echo "No attachments found, taking direct simulator shot"
+            xcrun simctl io "$UDID" screenshot shots/00-simulator-fallback.png || true
+          fi
+          ls -lh shots || true
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: start-screenshots
+          path: shots/
+          if-no-files-found: warn
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: start-test-logs
+          path: |
+            xcodebuild-test.log
+            DerivedData/Logs/Test/**/*.xcresult
+          if-no-files-found: warn

@@ -1,0 +1,7 @@
+DerivedData/
+*.xcuserdata/
+*.xcuserstate
+build/
+shots/
+.DS_Store
+reference-mockup.jpeg

@@ -1,0 +1,401 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		ABCD00000000000000000080 /* STARTApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000060 /* STARTApp.swift */; };
+		ABCD00000000000000000081 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000061 /* Theme.swift */; };
+		ABCD00000000000000000082 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000062 /* Models.swift */; };
+		ABCD00000000000000000083 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000063 /* ContentView.swift */; };
+		ABCD00000000000000000084 /* DiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000064 /* DiceView.swift */; };
+		ABCD00000000000000000085 /* CardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000065 /* CardsView.swift */; };
+		ABCD00000000000000000086 /* FingerPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000066 /* FingerPickerView.swift */; };
+		ABCD00000000000000000087 /* SituationDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000067 /* SituationDeckView.swift */; };
+		ABCD00000000000000000088 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000068 /* Assets.xcassets */; };
+		ABCD00000000000000000089 /* STARTScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD00000000000000000069 /* STARTScreenshotTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		ABCD00000000000000000051 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = ABCD00000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = ABCD00000000000000000010;
+			remoteInfo = START;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		ABCD00000000000000000060 /* STARTApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = STARTApp.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000061 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000062 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000063 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000064 /* DiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceView.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000065 /* CardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsView.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000066 /* FingerPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerPickerView.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000067 /* SituationDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SituationDeckView.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000068 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		ABCD00000000000000000069 /* STARTScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = STARTScreenshotTests.swift; sourceTree = "<group>"; };
+		ABCD00000000000000000070 /* START.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = START.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ABCD00000000000000000071 /* STARTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = STARTUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		ABCD00000000000000000042 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ABCD00000000000000000043 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		ABCD00000000000000000002 /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				ABCD00000000000000000003 /* START */,
+				ABCD00000000000000000004 /* STARTUITests */,
+				ABCD00000000000000000005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ABCD00000000000000000003 /* START */ = {
+			isa = PBXGroup;
+			children = (
+				ABCD00000000000000000060 /* STARTApp.swift */,
+				ABCD00000000000000000061 /* Theme.swift */,
+				ABCD00000000000000000062 /* Models.swift */,
+				ABCD00000000000000000063 /* ContentView.swift */,
+				ABCD00000000000000000064 /* DiceView.swift */,
+				ABCD00000000000000000065 /* CardsView.swift */,
+				ABCD00000000000000000066 /* FingerPickerView.swift */,
+				ABCD00000000000000000067 /* SituationDeckView.swift */,
+				ABCD00000000000000000068 /* Assets.xcassets */,
+			);
+			path = START;
+			sourceTree = "<group>";
+		};
+		ABCD00000000000000000004 /* STARTUITests */ = {
+			isa = PBXGroup;
+			children = (
+				ABCD00000000000000000069 /* STARTScreenshotTests.swift */,
+			);
+			path = STARTUITests;
+			sourceTree = "<group>";
+		};
+		ABCD00000000000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ABCD00000000000000000070 /* START.app */,
+				ABCD00000000000000000071 /* STARTUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		ABCD00000000000000000010 /* START */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ABCD00000000000000000021 /* Build configuration list for PBXNativeTarget "START" */;
+			buildPhases = (
+				ABCD00000000000000000042 /* Frameworks */,
+				ABCD00000000000000000040 /* Sources */,
+				ABCD00000000000000000044 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = START;
+			productName = START;
+			productReference = ABCD00000000000000000070 /* START.app */;
+			productType = "com.apple.product-type.application";
+		};
+		ABCD00000000000000000011 /* STARTUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ABCD00000000000000000022 /* Build configuration list for PBXNativeTarget "STARTUITests" */;
+			buildPhases = (
+				ABCD00000000000000000043 /* Frameworks */,
+				ABCD00000000000000000041 /* Sources */,
+				ABCD00000000000000000045 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				ABCD00000000000000000050 /* PBXTargetDependency */,
+			);
+			name = STARTUITests;
+			productName = STARTUITests;
+			productReference = ABCD00000000000000000071 /* STARTUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		ABCD00000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					ABCD00000000000000000010 = {
+						LastSwiftMigration = 1500;
+					};
+					ABCD00000000000000000011 = {
+						LastSwiftMigration = 1500;
+					};
+				};
+			};
+			buildConfigurationList = ABCD00000000000000000020 /* Build configuration list for PBXProject "START" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = ABCD00000000000000000002 /* Main */;
+			productRefGroup = ABCD00000000000000000005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				ABCD00000000000000000010 /* START */,
+				ABCD00000000000000000011 /* STARTUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		ABCD00000000000000000044 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCD00000000000000000088 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ABCD00000000000000000045 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		ABCD00000000000000000040 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCD00000000000000000080 /* STARTApp.swift in Sources */,
+				ABCD00000000000000000081 /* Theme.swift in Sources */,
+				ABCD00000000000000000082 /* Models.swift in Sources */,
+				ABCD00000000000000000083 /* ContentView.swift in Sources */,
+				ABCD00000000000000000084 /* DiceView.swift in Sources */,
+				ABCD00000000000000000085 /* CardsView.swift in Sources */,
+				ABCD00000000000000000086 /* FingerPickerView.swift in Sources */,
+				ABCD00000000000000000087 /* SituationDeckView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ABCD00000000000000000041 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCD00000000000000000089 /* STARTScreenshotTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		ABCD00000000000000000050 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = ABCD00000000000000000010 /* START */;
+			targetProxy = ABCD00000000000000000051 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		ABCD00000000000000000030 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		ABCD00000000000000000031 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		ABCD00000000000000000032 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = START;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.start.companion";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		ABCD00000000000000000033 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = START;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.start.companion";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		ABCD00000000000000000034 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.start.companion.uitests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = START;
+			};
+			name = Debug;
+		};
+		ABCD00000000000000000035 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.start.companion.uitests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = START;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		ABCD00000000000000000020 /* Build configuration list for PBXProject "START" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCD00000000000000000030 /* Debug */,
+				ABCD00000000000000000031 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ABCD00000000000000000021 /* Build configuration list for PBXNativeTarget "START" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCD00000000000000000032 /* Debug */,
+				ABCD00000000000000000033 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ABCD00000000000000000022 /* Build configuration list for PBXNativeTarget "STARTUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCD00000000000000000034 /* Debug */,
+				ABCD00000000000000000035 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = ABCD00000000000000000001 /* Project object */;
+}
