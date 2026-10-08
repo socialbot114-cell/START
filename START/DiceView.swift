@@ -18,21 +18,20 @@ struct DiceView: View {
         ZStack {
             TableBackground()
             ScrollView {
-                VStack(spacing: 13) {
+                VStack(spacing: 8) {
                     AppScreenHeader(title: "Dados") { dismiss() }
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 3) {
                         Text("UM GIRO. UM DESTINO.")
                             .font(.system(size: 9, weight: .heavy, design: .rounded))
                             .tracking(1.7)
                             .foregroundColor(Theme.accent)
                         Text("Role os dados")
-                            .font(.system(size: 24, weight: .heavy, design: .rounded))
+                            .font(.system(size: 22, weight: .heavy, design: .rounded))
                             .foregroundColor(.white)
-                        Text("D4, D6, D8, D10, D12 e D20 — sorteio justo, sem internet.")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                        Text("D4 a D20 · sorteio justo e offline")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundColor(Theme.mutedText)
-                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
@@ -46,13 +45,18 @@ struct DiceView: View {
                                     hasRolled = false
                                 }
                             } label: {
-                                Text(die.label)
-                                    .font(.system(size: 13, weight: .heavy, design: .rounded))
-                                    .foregroundColor(sides == die.rawValue ? Theme.accentText : .white.opacity(0.86))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 11)
-                                    .background(sides == die.rawValue ? Theme.accent : .black.opacity(0.52), in: RoundedRectangle(cornerRadius: 11))
-                                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(sides == die.rawValue ? .white.opacity(0.28) : .white.opacity(0.13), lineWidth: 1))
+                                HStack(spacing: 5) {
+                                    Circle()
+                                        .fill(resinColor(for: die.rawValue))
+                                        .frame(width: 6, height: 6)
+                                    Text(die.label)
+                                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                                }
+                                .foregroundColor(sides == die.rawValue ? Theme.accentText : .white.opacity(0.86))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(sides == die.rawValue ? Theme.accent : .black.opacity(0.52), in: RoundedRectangle(cornerRadius: 11))
+                                .overlay(RoundedRectangle(cornerRadius: 11).stroke(sides == die.rawValue ? .white.opacity(0.28) : .white.opacity(0.13), lineWidth: 1))
                             }
                             .buttonStyle(.plain)
                             .accessibilityIdentifier("die-d\(die.rawValue)")
@@ -63,16 +67,22 @@ struct DiceView: View {
 
                     ZStack(alignment: .bottom) {
                         RoundedRectangle(cornerRadius: 23)
-                            .fill(LinearGradient(colors: [.black.opacity(0.74), Theme.cardRaised.opacity(0.93)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .fill(LinearGradient(colors: [Color(red: 0.035, green: 0.075, blue: 0.065), .black.opacity(0.89)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        Circle()
+                            .fill(RadialGradient(colors: [resinColor(for: sides).opacity(0.24), .clear], center: .center, startRadius: 5, endRadius: 115))
+                            .frame(width: 230, height: 230)
+                            .offset(y: -4)
+                            .blur(radius: 10)
+                            .allowsHitTesting(false)
                         RoundedRectangle(cornerRadius: 23)
-                            .stroke(Theme.accent.opacity(0.28), lineWidth: 1)
+                            .stroke(Theme.accent.opacity(0.24), lineWidth: 1)
                         Die3DView(sides: sides, result: result, rollToken: rollToken)
                             .padding(.horizontal, 8)
                             .padding(.top, 6)
                             .padding(.bottom, 32)
                             .accessibilityIdentifier("die-3d-view")
                         HStack(spacing: 6) {
-                            Circle().fill(Theme.greenLight).frame(width: 6, height: 6)
+                            Circle().fill(resinColor(for: sides)).frame(width: 6, height: 6)
                             Text(hasRolled ? "D\(sides)  ·  RESULTADO" : "D\(sides)  ·  PRONTO PARA ROLAR")
                                 .font(.system(size: 9, weight: .heavy, design: .rounded))
                                 .tracking(1.2)
@@ -88,7 +98,7 @@ struct DiceView: View {
                         .padding(.horizontal, 15)
                         .padding(.bottom, 12)
                     }
-                    .frame(height: 264)
+                    .frame(height: 205)
                     .padding(.horizontal, 18)
 
                     Button {
@@ -107,12 +117,12 @@ struct DiceView: View {
                     .accessibilityIdentifier("roll-dice-button")
 
                     Text("Cada face tem a mesma chance de sair.")
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .font(.system(size: 9, weight: .medium, design: .rounded))
                         .foregroundColor(.white.opacity(0.54))
                         .padding(.bottom, 8)
                 }
-                .padding(.top, 7)
-                .padding(.bottom, 18)
+                .padding(.top, 3)
+                .padding(.bottom, 10)
                 .frame(maxWidth: 560)
                 .frame(maxWidth: .infinity)
             }
@@ -135,10 +145,24 @@ struct DiceView: View {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         result = screenshotMode ? min(4, sides) : Dice.roll(sides: sides)
         rollToken += 1
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.72) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.08) {
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.30) {
             hasRolled = true
             rolling = false
             UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+    }
+
+    private func resinColor(for sides: Int) -> Color {
+        switch sides {
+        case 4: return Color(red: 0.84, green: 0.16, blue: 0.18)
+        case 6: return Color(red: 0.88, green: 0.82, blue: 0.68)
+        case 8: return Color(red: 0.10, green: 0.43, blue: 0.29)
+        case 10: return Color(red: 0.65, green: 0.15, blue: 0.24)
+        case 12: return Color(red: 0.48, green: 0.22, blue: 0.70)
+        default: return Color(red: 0.10, green: 0.27, blue: 0.62)
         }
     }
 }

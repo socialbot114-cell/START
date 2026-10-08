@@ -39,7 +39,7 @@ final class STARTScreenshotTests: XCTestCase {
         for sides in [4, 8, 10, 12, 20] {
             app.buttons["die-d\(sides)"].tap()
             app.buttons["roll-dice-button"].tap()
-            sleep(2)
+            sleep(3)
             let numericValue = Int(resultLabel.label.filter(\.isNumber)) ?? 0
             XCTAssertTrue((1...sides).contains(numericValue), "D\(sides) returned \(numericValue), outside its face range")
         }

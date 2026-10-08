@@ -37,6 +37,7 @@ struct Die3DView: UIViewRepresentable {
         private var currentToken: Int?
         private var dieNode: SCNNode?
         private var faces: [PolyFace] = []
+        private var vertices: [SIMD3<Float>] = []
 
         func update(sides: Int, result: Int, rollToken: Int) {
             guard let view else { return }
@@ -45,23 +46,20 @@ struct Die3DView: UIViewRepresentable {
                 currentToken = nil
                 let built = DiceGeometry.make(sides: sides)
                 faces = built.faces
+                vertices = built.vertices
                 dieNode?.removeFromParentNode()
                 dieNode = built.node
                 view.scene = DiceGeometry.scene(with: built.node)
             }
-            guard let dieNode, let face = face(for: result) else { return }
+            guard let dieNode else { return }
+            let target = DiceGeometry.orientation(sides: sides, result: result, faces: faces, vertices: vertices)
             if currentToken == nil {
                 currentToken = rollToken
-                dieNode.simdOrientation = DiceGeometry.orientation(for: face)
+                dieNode.simdOrientation = target
             } else if currentToken != rollToken {
                 currentToken = rollToken
-                DiceGeometry.animate(dieNode, to: face)
+                DiceGeometry.animate(dieNode, to: target)
             }
-        }
-
-        private func face(for result: Int) -> PolyFace? {
-            guard !faces.isEmpty else { return nil }
-            return faces[(max(1, result) - 1) % faces.count]
         }
     }
 }
@@ -73,22 +71,29 @@ private struct PolyFace {
 }
 
 private enum DiceGeometry {
-    private static let gold = UIColor(red: 0.92, green: 0.62, blue: 0.20, alpha: 1)
-    private static let champagne = UIColor(red: 1.0, green: 0.86, blue: 0.58, alpha: 1)
+    private static let warmKey = UIColor(red: 1.0, green: 0.73, blue: 0.43, alpha: 1)
     private static let faceInset: Float = 0.10
     private static let faceDepth: Float = 0.035
 
-    static func make(sides: Int) -> (node: SCNNode, faces: [PolyFace]) {
+    static func make(sides: Int) -> (node: SCNNode, faces: [PolyFace], vertices: [SIMD3<Float>]) {
         let rawVertices = vertices(for: sides)
         let radius = rawVertices.map { simd_length($0) }.max() ?? 1
         let vertices = rawVertices.map { $0 / radius * 1.18 }
-        let faces = convexFaces(vertices: vertices)
+        let hull = convexFaces(vertices: vertices)
+        let faces = numberedFaces(hull, sides: sides)
         precondition(faces.count == sides, "D\(sides) mesh generated \(faces.count) faces")
         let root = SCNNode()
         let body = makeBody(vertices: vertices, faces: faces, sides: sides)
         root.addChildNode(body)
-        root.addChildNode(makeEdges(vertices: vertices, faces: faces))
-        if sides == 6 {
+        root.addChildNode(makeEdges(vertices: vertices, faces: faces, sides: sides))
+        if sides == 4 {
+            for face in faces {
+                for vertexIndex in face.indices {
+                    let point = face.center + (vertices[vertexIndex] - face.center) * 0.66
+                    root.addChildNode(makeLabel("\(vertexIndex + 1)", face: face, vertices: vertices, position: point, scaleMultiplier: 0.58))
+                }
+            }
+        } else if sides == 6 {
             for (index, face) in faces.enumerated() {
                 root.addChildNode(makePips(value: index + 1, face: face, vertices: vertices))
             }
@@ -98,7 +103,7 @@ private enum DiceGeometry {
             }
         }
         root.simdScale = SIMD3<Float>(repeating: 1.0)
-        return (root, faces)
+        return (root, faces, vertices)
     }
 
     static func scene(with die: SCNNode) -> SCNScene {
@@ -117,6 +122,11 @@ private enum DiceGeometry {
         key.type = .omni
         key.intensity = 460
         key.color = UIColor(red: 1.0, green: 0.82, blue: 0.57, alpha: 1)
+        key.castsShadow = true
+        key.shadowMode = .deferred
+        key.shadowRadius = 7
+        key.shadowSampleCount = 12
+        key.shadowColor = UIColor.black.withAlphaComponent(0.48)
         let keyNode = SCNNode()
         keyNode.light = key
         keyNode.position = SCNVector3(-3, 4, 5)
@@ -134,7 +144,7 @@ private enum DiceGeometry {
         let rim = SCNLight()
         rim.type = .directional
         rim.intensity = 360
-        rim.color = gold
+        rim.color = warmKey
         let rimNode = SCNNode()
         rimNode.light = rim
         rimNode.eulerAngles = SCNVector3(-0.6, 0.7, 0)
@@ -152,9 +162,12 @@ private enum DiceGeometry {
         shadow.position = SCNVector3(0, -1.32, -0.38)
         shadow.eulerAngles.x = -0.10
         let shadowMaterial = SCNMaterial()
-        shadowMaterial.diffuse.contents = UIColor.black.withAlphaComponent(0.50)
+        shadowMaterial.diffuse.contents = UIColor.black
+        shadowMaterial.transparent.contents = makeSoftShadowTexture()
         shadowMaterial.lightingModel = .constant
         shadowMaterial.isDoubleSided = true
+        shadowMaterial.transparencyMode = .aOne
+        shadowMaterial.writesToDepthBuffer = false
         shadow.geometry?.materials = [shadowMaterial]
         shadow.opacity = 0.42
         scene.rootNode.addChildNode(shadow)
@@ -164,32 +177,67 @@ private enum DiceGeometry {
         return scene
     }
 
-    static func orientation(for face: PolyFace) -> simd_quatf {
-        let cameraFacing = simd_quatf(from: face.normal, to: SIMD3<Float>(0, 0, 1))
+    private static func makeSoftShadowTexture() -> UIImage {
+        let size = CGSize(width: 256, height: 128)
+        return UIGraphicsImageRenderer(size: size).image { renderer in
+            let colors = [
+                UIColor.black.withAlphaComponent(0.46).cgColor,
+                UIColor.black.withAlphaComponent(0.18).cgColor,
+                UIColor.clear.cgColor
+            ] as CFArray
+            let locations: [CGFloat] = [0, 0.55, 1]
+            guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: locations) else { return }
+            renderer.cgContext.drawRadialGradient(
+                gradient,
+                startCenter: CGPoint(x: size.width / 2, y: size.height / 2),
+                startRadius: 2,
+                endCenter: CGPoint(x: size.width / 2, y: size.height / 2),
+                endRadius: size.width / 2,
+                options: []
+            )
+        }
+    }
+
+    static func orientation(sides: Int, result: Int, faces: [PolyFace], vertices: [SIMD3<Float>]) -> simd_quatf {
+        let chosenDirection: SIMD3<Float>
+        if sides == 4 {
+            chosenDirection = simd_normalize(vertices[(max(1, result) - 1) % vertices.count])
+        } else {
+            chosenDirection = faces[(max(1, result) - 1) % faces.count].normal
+        }
+        let cameraFacing = simd_quatf(from: chosenDirection, to: SIMD3<Float>(0, 0, 1))
         let revealSideFaces = simd_quatf(angle: .pi / 8, axis: SIMD3<Float>(1, 0, 0))
             * simd_quatf(angle: -.pi / 8, axis: SIMD3<Float>(0, 1, 0))
         return revealSideFaces * cameraFacing
     }
 
-    static func animate(_ node: SCNNode, to face: PolyFace) {
+    static func animate(_ node: SCNNode, to target: simd_quatf) {
         let start = node.simdOrientation
-        let target = orientation(for: face)
-        let tumbleAxis = simd_normalize(SIMD3<Float>(0.78, 0.54, 0.31))
+        let axisA = simd_normalize(SIMD3<Float>(0.78, 0.54, 0.31))
+        let axisB = simd_normalize(SIMD3<Float>(-0.28, 0.85, 0.44))
+        let axisC = simd_normalize(SIMD3<Float>(0.38, -0.22, 0.90))
         let restingY = node.position.y
-        let tumble = SCNAction.customAction(duration: 1.62) { node, elapsed in
-            let t = min(max(Float(elapsed / 1.62), 0), 1)
-            let eased = 1 - pow(1 - t, 3)
+        let restingX = node.position.x
+        let duration: Float = 2.25
+        let tumble = SCNAction.customAction(duration: TimeInterval(duration)) { node, elapsed in
+            let t = min(max(Float(elapsed) / duration, 0), 1)
+            let eased = t < 0.76 ? 0.90 * (1 - pow(1 - t / 0.76, 2)) : 0.90 + 0.10 * ((t - 0.76) / 0.24)
             let base = simd_slerp(start, target, eased)
-            let spin = simd_quatf(angle: (1 - eased) * .pi * 12, axis: tumbleAxis)
+            let decay = 1 - eased
+            let spin = simd_quatf(angle: decay * .pi * 10, axis: axisC)
+                * simd_quatf(angle: decay * .pi * 8, axis: axisB)
+                * simd_quatf(angle: decay * .pi * 12, axis: axisA)
             node.simdOrientation = spin * base
-            node.position.y = restingY + 0.34 * sin(t * .pi)
-            let bounce = 1 + 0.075 * sin(t * .pi)
+
+            let launch = t < 0.48 ? 0.46 * sin(.pi * t / 0.48) : 0
+            let contactTime = max(0, t - 0.48)
+            let impacts = t > 0.48 ? 0.16 * exp(-contactTime * 12) * abs(sin(contactTime * 36)) : 0
+            node.position.y = restingY + launch + impacts
+            node.position.x = restingX + 0.16 * sin(t * .pi * 1.3) * decay
+            let bounce = 1 + 0.06 * sin(t * .pi) + 0.025 * impacts
             node.simdScale = SIMD3<Float>(repeating: bounce)
         }
-        let settle = SCNAction.group([
-            SCNAction.scale(to: 1, duration: 0.18),
-            SCNAction.move(to: SCNVector3(node.position.x, 0.06, node.position.z), duration: 0.18)
-        ])
+        let settle = SCNAction.group([SCNAction.scale(to: 1, duration: 0.16), SCNAction.move(to: SCNVector3(restingX, restingY, node.position.z), duration: 0.16)])
         settle.timingMode = .easeOut
         node.removeAllActions()
         node.runAction(.sequence([tumble, settle]))
@@ -318,6 +366,37 @@ private enum DiceGeometry {
         }
     }
 
+    private static func numberedFaces(_ faces: [PolyFace], sides: Int) -> [PolyFace] {
+        guard sides != 4, sides.isMultiple(of: 2), faces.count == sides else { return faces }
+
+        func belongsToNegativeHemisphere(_ normal: SIMD3<Float>) -> Bool {
+            for component in [normal.z, normal.y, normal.x] where abs(component) > 0.0001 {
+                return component < 0
+            }
+            return false
+        }
+
+        let negative = faces.filter { belongsToNegativeHemisphere($0.normal) }.sorted { lhs, rhs in
+            if abs(lhs.normal.z - rhs.normal.z) > 0.0001 { return lhs.normal.z < rhs.normal.z }
+            if abs(lhs.normal.y - rhs.normal.y) > 0.0001 { return lhs.normal.y < rhs.normal.y }
+            return lhs.normal.x < rhs.normal.x
+        }
+        var positive = faces.filter { !belongsToNegativeHemisphere($0.normal) }
+        guard negative.count == sides / 2, positive.count == sides / 2 else { return faces }
+
+        var numbered = Array<PolyFace?>(repeating: nil, count: sides)
+        for (index, face) in negative.enumerated() {
+            guard let oppositeIndex = positive.indices.min(by: { left, right in
+                simd_dot(face.normal, positive[left].normal) < simd_dot(face.normal, positive[right].normal)
+            }) else { return faces }
+            let opposite = positive.remove(at: oppositeIndex)
+            guard simd_dot(face.normal, opposite.normal) < -0.98 else { return faces }
+            numbered[index] = face
+            numbered[sides - index - 1] = opposite
+        }
+        return numbered.compactMap { $0 }
+    }
+
     private static func makeBody(vertices: [SIMD3<Float>], faces: [PolyFace], sides: Int) -> SCNNode {
         let node = SCNNode()
         for (faceIndex, face) in faces.enumerated() {
@@ -326,8 +405,9 @@ private enum DiceGeometry {
             node.addChildNode(makePolygon(points: panel, normal: face.normal, material: material))
         }
 
-        // Narrow metallic chamfers between the inset face panels give each die a precision-cut finish.
+        // Fine, body-colored chamfers give the resin a molded and polished edge.
         var visitedEdges = Set<String>()
+        let bevel = bevelMaterial(sides: sides)
         for face in faces {
             for index in face.indices.indices {
                 let a = face.indices[index]
@@ -344,12 +424,12 @@ private enum DiceGeometry {
                     insetPoint(vertices[b], toward: second.center, normal: second.normal),
                     insetPoint(vertices[a], toward: second.center, normal: second.normal)
                 ]
-                node.addChildNode(makePolygon(points: strip, normal: first.normal + second.normal, material: bevelMaterial()))
+                node.addChildNode(makePolygon(points: strip, normal: first.normal + second.normal, material: bevel))
             }
         }
 
         // Small polished corner caps close the bevel seams at the polyhedron vertices.
-        let capMaterial = bevelMaterial()
+        let capMaterial = bevel
         for vertex in vertices {
             let cap = SCNSphere(radius: 0.045)
             cap.segmentCount = 12
@@ -389,41 +469,53 @@ private enum DiceGeometry {
         return SCNNode(geometry: geometry)
     }
 
-    private static func enamelMaterial(sides: Int, variation: Int) -> SCNMaterial {
-        let base: (CGFloat, CGFloat, CGFloat)
+    private static func resinColor(sides: Int) -> (CGFloat, CGFloat, CGFloat) {
         switch sides {
-        case 4: base = (0.19, 0.055, 0.085) // garnet
-        case 6: base = (0.045, 0.16, 0.12) // emerald
-        case 8: base = (0.045, 0.105, 0.25) // sapphire
-        case 10: base = (0.25, 0.095, 0.035) // amber
-        case 12: base = (0.16, 0.07, 0.24) // amethyst
-        default: base = (0.035, 0.095, 0.22) // midnight blue
+        case 4: return (0.66, 0.075, 0.085) // ruby red resin
+        case 6: return (0.82, 0.77, 0.65) // classic ivory resin
+        case 8: return (0.055, 0.20, 0.50) // cobalt resin
+        case 10: return (0.055, 0.35, 0.21) // racing green resin
+        case 12: return (0.33, 0.105, 0.52) // violet resin
+        default: return (0.045, 0.13, 0.45) // deep blue resin
         }
-        let variations: [CGFloat] = [0.88, 1.08, 0.96, 1.16]
+    }
+
+    private static func enamelMaterial(sides: Int, variation: Int) -> SCNMaterial {
+        let base = resinColor(sides: sides)
+        let variations: [CGFloat] = [0.96, 1.04, 0.99, 1.06]
         let factor = variations[variation % variations.count]
         let material = SCNMaterial()
         material.diffuse.contents = UIColor(red: min(1, base.0 * factor), green: min(1, base.1 * factor), blue: min(1, base.2 * factor), alpha: 1)
-        material.metalness.contents = 0.42
-        material.roughness.contents = 0.23
-        material.specular.contents = UIColor(white: 0.92, alpha: 1)
+        material.metalness.contents = 0.025
+        material.roughness.contents = 0.22
+        material.clearCoat.contents = 0.78
+        material.clearCoatRoughness.contents = 0.10
+        material.specular.contents = UIColor(white: 0.98, alpha: 1)
         material.lightingModel = .physicallyBased
         material.isDoubleSided = false
         return material
     }
 
-    private static func bevelMaterial() -> SCNMaterial {
+    private static func bevelMaterial(sides: Int) -> SCNMaterial {
+        let base = resinColor(sides: sides)
         let material = SCNMaterial()
-        material.diffuse.contents = gold
-        material.metalness.contents = 0.82
-        material.roughness.contents = 0.20
-        material.specular.contents = champagne
-        material.emission.contents = gold.withAlphaComponent(0.05)
+        material.diffuse.contents = UIColor(
+            red: min(1, base.0 * 1.30 + 0.035),
+            green: min(1, base.1 * 1.30 + 0.035),
+            blue: min(1, base.2 * 1.30 + 0.035),
+            alpha: 1
+        )
+        material.metalness.contents = 0.02
+        material.roughness.contents = 0.18
+        material.clearCoat.contents = 0.62
+        material.clearCoatRoughness.contents = 0.11
+        material.specular.contents = UIColor(white: 0.96, alpha: 1)
         material.lightingModel = .physicallyBased
         material.isDoubleSided = true
         return material
     }
 
-    private static func makeEdges(vertices: [SIMD3<Float>], faces: [PolyFace]) -> SCNNode {
+    private static func makeEdges(vertices: [SIMD3<Float>], faces: [PolyFace], sides: Int) -> SCNNode {
         var edgePairs = Set<String>()
         var lineVertices: [SCNVector3] = []
         var indices: [Int32] = []
@@ -448,8 +540,9 @@ private enum DiceGeometry {
             elements: [SCNGeometryElement(indices: indices, primitiveType: .line)]
         )
         let material = SCNMaterial()
-        material.diffuse.contents = UIColor(red: 0.40, green: 0.25, blue: 0.10, alpha: 1)
-        material.emission.contents = gold.withAlphaComponent(0.025)
+        let base = resinColor(sides: sides)
+        material.diffuse.contents = UIColor(red: base.0 * 0.62, green: base.1 * 0.62, blue: base.2 * 0.62, alpha: 1)
+        material.emission.contents = UIColor(red: base.0, green: base.1, blue: base.2, alpha: 0.025)
         material.lightingModel = .constant
         geometry.materials = [material]
         let node = SCNNode(geometry: geometry)
@@ -487,36 +580,43 @@ private enum DiceGeometry {
         }
 
         let material = SCNMaterial()
-        material.diffuse.contents = UIColor(red: 1.0, green: 0.91, blue: 0.73, alpha: 1)
-        material.metalness.contents = 0.18
-        material.roughness.contents = 0.24
-        material.specular.contents = UIColor.white
-        material.emission.contents = UIColor(red: 1.0, green: 0.72, blue: 0.36, alpha: 0.06)
+        material.diffuse.contents = UIColor(red: 0.09, green: 0.075, blue: 0.06, alpha: 1)
+        material.metalness.contents = 0.02
+        material.roughness.contents = 0.34
+        material.specular.contents = UIColor(white: 0.34, alpha: 1)
         material.lightingModel = .physicallyBased
 
         let root = SCNNode()
-        let radius = CGFloat(min(0.075, shortestEdge * 0.064))
+        let radius = CGFloat(min(0.057, shortestEdge * 0.049))
         for point in pipPositions {
             let pip = SCNSphere(radius: radius)
-            pip.segmentCount = 18
+            pip.segmentCount = 24
             pip.materials = [material]
             let pipNode = SCNNode(geometry: pip)
-            pipNode.simdPosition = face.center - face.normal * faceDepth + face.normal * 0.018 + u * point.x + v * point.y
+            pipNode.simdPosition = face.center - face.normal * (faceDepth + Float(radius) * 0.52) + face.normal * 0.001 + u * point.x + v * point.y
             pipNode.castsShadow = false
             root.addChildNode(pipNode)
         }
         return root
     }
 
-    private static func makeLabel(_ value: String, face: PolyFace, vertices: [SIMD3<Float>]) -> SCNNode {
+    private static func makeLabel(
+        _ value: String,
+        face: PolyFace,
+        vertices: [SIMD3<Float>],
+        position: SIMD3<Float>? = nil,
+        scaleMultiplier: Float = 1
+    ) -> SCNNode {
         let text = SCNText(string: value, extrusionDepth: 0.22)
         text.font = UIFont.systemFont(ofSize: 28, weight: .black)
         text.flatness = 0.16
         text.alignmentMode = CATextLayerAlignmentMode.center.rawValue
-        text.firstMaterial?.diffuse.contents = UIColor(red: 1.0, green: 0.88, blue: 0.62, alpha: 1)
-        text.firstMaterial?.emission.contents = UIColor.white.withAlphaComponent(0.14)
+        text.firstMaterial?.diffuse.contents = UIColor(red: 1.0, green: 0.93, blue: 0.82, alpha: 1)
+        text.firstMaterial?.emission.contents = UIColor.white.withAlphaComponent(0.035)
         text.firstMaterial?.lightingModel = .physicallyBased
         text.firstMaterial?.isDoubleSided = true
+        text.firstMaterial?.metalness.contents = 0
+        text.firstMaterial?.roughness.contents = 0.30
         let (minimum, maximum) = text.boundingBox
         let width = maximum.x - minimum.x
         let height = maximum.y - minimum.y
@@ -528,12 +628,12 @@ private enum DiceGeometry {
             shortestEdge = min(shortestEdge, simd_distance(a, b))
         }
         let glyphExtent = max(max(width, height), 1)
-        let scale = min(0.032, max(0.012, shortestEdge * 0.53 / Float(glyphExtent)))
+        let scale = min(0.032, max(0.012, shortestEdge * 0.53 / Float(glyphExtent))) * scaleMultiplier
         let node = SCNNode(geometry: text)
         node.pivot = SCNMatrix4MakeTranslation(center.x, center.y, center.z)
         node.scale = SCNVector3(scale, scale, scale)
         node.simdOrientation = simd_quatf(from: SIMD3<Float>(0, 0, 1), to: face.normal)
-        node.simdPosition = face.center - face.normal * faceDepth + face.normal * 0.009
+        node.simdPosition = (position ?? face.center) - face.normal * faceDepth + face.normal * 0.009
         node.renderingOrder = 3
         node.castsShadow = false
         return node
