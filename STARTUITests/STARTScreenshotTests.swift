@@ -16,6 +16,15 @@ final class STARTScreenshotTests: XCTestCase {
         a.name = name
         a.lifetime = .keepAlways
         add(a)
+        // Also persist to /tmp on the runner Mac (UI tests execute on the host),
+        // so CI can upload them without parsing .xcresult.
+        do {
+            let dir = URL(fileURLWithPath: "/tmp/start-shots", isDirectory: true)
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try s.pngRepresentation.write(to: dir.appendingPathComponent("\(name).png"))
+        } catch {
+            print("shot save failed: \(error)")
+        }
     }
 
     private func goBackIfNeeded() {

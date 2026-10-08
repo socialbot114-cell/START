@@ -67,8 +67,21 @@ jobs:
           find DerivedData -type f -name "*.png" -exec cp {} shots/ \; || true
           XCRESULT=$(find DerivedData/Logs/Test -maxdepth 1 -name "*.xcresult" | head -n 1)
           echo "XCRESULT=$XCRESULT"
+          echo "Copying /tmp/start-shots written by UI tests..."
+          mkdir -p /tmp/start-shots || true
+          find /tmp/start-shots -type f | head -n 50 || true
+          cp /tmp/start-shots/*.png shots/ 2>/dev/null || true
           if [ -n "$XCRESULT" ]; then
             echo "Exporting attachments via xcresulttool..."
+            xcrun xcresulttool get --path "$XCRESULT" --format json > /tmp/result.json || true
+            python3 - <<'PY' || true
+import json, subprocess, os
+try:
+    d = json.load(open('/tmp/result.json'))
+    print('xcresult json loaded')
+except Exception as e:
+    print('json load failed', e)
+PY
             xcrun xcresulttool export object --legacy --type directory --path "$XCRESULT" --output-path exported || xcrun xcresulttool export --legacy --type directory --path "$XCRESULT" --output-path exported || true
             find exported -type f | head -n 100 || true
             find exported -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -exec cp {} shots/ \; || true
