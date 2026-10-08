@@ -3,6 +3,8 @@ DerivedData/
 *.xcuserstate
 build/
 shots/
+visual-review/
+prints-finais/
 .DS_Store
 reference-mockup.jpeg
 *.jpeg

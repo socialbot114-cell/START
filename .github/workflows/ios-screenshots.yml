@@ -1,113 +1,125 @@
-name: iOS build + screenshots
+name: iOS build + visual review
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  build-and-shots:
+  build-test-capture:
     runs-on: macos-15
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
+      - name: Select Xcode
         run: |
-          ls /Applications | grep -i xcode || true
-          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer || sudo xcode-select -p
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           xcodebuild -version
-          xcrun simctl list devices | head -n 60
 
-      - name: Boot iPhone simulator
+      - name: Boot iPhone 16 simulator
         run: |
-          UDID=$(xcrun simctl list devices -j | python3 -c "import json,sys; d=json.load(sys.stdin); cands=[x for devs in d['devices'].values() for x in devs if 'iPhone 16' in x.get('name','') and x.get('isAvailable',True)]; print(cands[0]['udid'] if cands else '')")
-          echo "UDID=$UDID"
+          UDID=$(xcrun simctl list devices -j | python3 -c "import json,sys; d=json.load(sys.stdin); c=[x for group in d['devices'].values() for x in group if x.get('name') == 'iPhone 16' and x.get('isAvailable',True)]; print(c[0]['udid'] if c else '')")
           if [ -z "$UDID" ]; then
-            echo "No iPhone 16 found, listing runtimes"
-            xcrun simctl list devicetypes | head -n 40
+            xcrun simctl list devices available
             exit 1
           fi
-          echo "UDID=$UDID" >> $GITHUB_ENV
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
           xcrun simctl boot "$UDID" || true
-          xcrun simctl bootstatus "$UDID" -b || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+          rm -rf /tmp/start-shots
 
-      - name: Build for simulator
+      - name: Build for iOS Simulator
         run: |
           xcodebuild \
             -project START.xcodeproj \
             -scheme START \
             -configuration Debug \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "platform=iOS Simulator,id=$UDID" \
             -derivedDataPath DerivedData \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY='' \
             build
 
-      - name: Run UI tests (captures screenshots)
+      - name: Prepare visual-review folder
+        run: mkdir -p visual-review/screenshots
+
+      - name: Record simulator preview
         run: |
+          xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/START-session.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/start-video.pid"
+          sleep 2
+
+      - name: Run UI tests and capture each screen
+        run: |
+          set -o pipefail
           xcodebuild \
             -project START.xcodeproj \
             -scheme START \
             -configuration Debug \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "platform=iOS Simulator,id=$UDID" \
             -derivedDataPath DerivedData \
             -only-testing:STARTUITests/STARTScreenshotTests/testScreenshots \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
-            test | tee xcodebuild-test.log || true
-          echo "---- tail log ----"
-          tail -n 200 xcodebuild-test.log || true
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY='' \
+            test | tee xcodebuild-test.log
 
-      - name: Collect screenshots
+      - name: Stop simulator preview recording
         if: always()
         run: |
-          mkdir -p shots exported
-          echo "Searching DerivedData for screenshots..."
-          find DerivedData -type f -name "*.png" | head -n 100 || true
-          find DerivedData -type f -name "*.png" -exec cp {} shots/ \; || true
-          XCRESULT=$(find DerivedData/Logs/Test -maxdepth 1 -name "*.xcresult" | head -n 1)
-          echo "XCRESULT=$XCRESULT"
-          echo "Copying /tmp/start-shots written by UI tests..."
-          mkdir -p /tmp/start-shots || true
-          find /tmp/start-shots -type f | head -n 50 || true
-          cp /tmp/start-shots/*.png shots/ 2>/dev/null || true
+          if [ -f "$RUNNER_TEMP/start-video.pid" ]; then
+            kill -INT "$(cat "$RUNNER_TEMP/start-video.pid")" 2>/dev/null || true
+            sleep 3
+          fi
+
+      - name: Collect screenshots and test result attachments
+        if: always()
+        run: |
+          cp /tmp/start-shots/*.png visual-review/screenshots/ 2>/dev/null || true
+          XCRESULT=$(find DerivedData/Logs/Test -maxdepth 1 -name '*.xcresult' -print 2>/dev/null | sort | tail -n 1)
           if [ -n "$XCRESULT" ]; then
-            echo "Exporting attachments via xcresulttool..."
-            xcrun xcresulttool get --path "$XCRESULT" --format json > /tmp/result.json || true
-            python3 -c "import json; d=json.load(open('/tmp/result.json')); print('xcresult json ok')" || true
-            xcrun xcresulttool export object --legacy --type directory --path "$XCRESULT" --output-path exported || xcrun xcresulttool export --legacy --type directory --path "$XCRESULT" --output-path exported || true
-            find exported -type f | head -n 100 || true
-            find exported -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -exec cp {} shots/ \; || true
-            # Rename exported files with index for stable ordering
-            i=0
-            for f in shots/*; do
-              [ -e "$f" ] || continue
-              i=$((i+1))
-              ext="${f##*.}"
-              mv "$f" "shots/$(printf '%02d' $i)-shot.$ext" || true
-            done
+            mkdir -p "$RUNNER_TEMP/xc-attachments"
+            xcrun xcresulttool export attachments --path "$XCRESULT" --output-path "$RUNNER_TEMP/xc-attachments" || true
+            find "$RUNNER_TEMP/xc-attachments" -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) -exec cp -n {} visual-review/screenshots/ \; || true
           fi
-          ls -lh shots || true
-          if [ -z "$(ls -A shots 2>/dev/null)" ]; then
-            echo "WARNING: no screenshots exported from xcresult"
-            xcrun simctl io booted screenshot shots/00-simulator-fallback.png || true
+          if [ -z "$(ls -A visual-review/screenshots 2>/dev/null)" ]; then
+            echo 'No UI-test screenshots were found.' > visual-review/SCREENSHOTS-MISSING.txt
           fi
-          ls -lh shots || true
+          find visual-review -maxdepth 2 -type f -print
 
-      - name: Upload screenshots
+      - name: Generate contact sheet
         if: always()
+        run: |
+          if find visual-review/screenshots -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) | grep -q .; then
+            swift Scripts/make_contact_sheet.swift visual-review/screenshots visual-review/START-contact-sheet.png
+          fi
+
+      - name: Upload visual review bundle
+        if: always()
+        id: upload-review
         uses: actions/upload-artifact@v4
         with:
-          name: start-screenshots
-          path: shots/
+          name: START-visual-review
+          path: visual-review/
           if-no-files-found: warn
+          retention-days: 14
 
-      - name: Upload test logs
+      - name: Add review links to run summary
+        if: always()
+        run: |
+          echo '## START — revisão visual' >> "$GITHUB_STEP_SUMMARY"
+          echo '[Baixar prints, montagem geral e vídeo da rolagem 3D](${{ steps.upload-review.outputs.artifact-url }})' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build and UI test logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: start-test-logs
+          name: START-build-test-logs
           path: |
             xcodebuild-test.log
             DerivedData/Logs/Test/**/*.xcresult
           if-no-files-found: warn
+          retention-days: 14

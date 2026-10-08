@@ -28,7 +28,9 @@ enum Dice: Int, CaseIterable, Identifiable {
     var label: String { "D\(rawValue)" }
 
     static func roll(sides: Int) -> Int {
-        Int.random(in: 1...max(2, sides))
+        precondition(sides >= 2, "A die needs at least two sides")
+        var generator = SystemRandomNumberGenerator()
+        return Int.random(in: 1...sides, using: &generator)
     }
 }
 
@@ -50,8 +52,14 @@ struct PlayingCard: Identifiable, Equatable {
     var label: String { "\(rankLabel)\(suit)" }
     var isRed: Bool { suit == "♥" || suit == "♦" }
 
+    static func deck() -> [PlayingCard] {
+        ["♠", "♥", "♦", "♣"].flatMap { suit in
+            (2...14).map { PlayingCard(rank: $0, suit: suit) }
+        }
+    }
+
     static func random() -> PlayingCard {
-        PlayingCard(rank: Int.random(in: 2...14), suit: ["♠", "♥", "♦", "♣"].randomElement()!)
+        deck().randomElement()!
     }
 }
 

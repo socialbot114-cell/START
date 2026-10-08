@@ -1,17 +1,20 @@
-# START — Your Board Game Companion (MVP iOS)
+# START — Your Board Game Companion
 
-Companion offline para decidir quem começa. SwiftUI nativo, iOS 17+.
+MVP nativo para iOS, feito em SwiftUI e utilizável offline. A linguagem visual parte da referência de mesa de jogos: madeira escura, painéis verdes/carvão e detalhes dourados.
 
-## Modos do MVP
-1. **Dados** — D4, D6, D8, D10, D12, D20
-2. **Carta mais alta** — cada jogador tira uma carta, maior vence, empate gera desempate
-3. **Dedos na tela** — multi-toque simultâneo, sorteio após segurar
-4. **Situações** — baralho com critérios (óculos, vermelho, mais novo...)
+## Ferramentas
 
-## CI / Prints
-Workflow `.github/workflows/ios-screenshots.yml` roda em `macos-15`:
-- build no simulador iPhone 16
-- `STARTScreenshotTests/testScreenshots` abre cada modo e anexa screenshots
-- artefatos: `start-screenshots` + `start-test-logs`
+- **Dados 3D:** D4, D6, D8, D10, D12 e D20 com modelos poligonais SceneKit. O resultado é sorteado uniformemente pelo gerador do sistema; a animação termina com a face sorteada voltada para o jogador.
+- **Carta mais alta:** usa um baralho padrão de 52 cartas sem repetição dentro da rodada, com desempate.
+- **Dedos na tela:** sorteia entre toques simultâneos mantidos por 2 segundos.
+- **Cartas de situação:** sorteia critérios offline e deixa o grupo selecionar quem começa.
 
-Para rodar manualmente: Actions → iOS build + screenshots → Run workflow.
+## Revisão visual pelo GitHub Actions
+
+O workflow **iOS build + visual review** roda no simulador de iPhone e publica o artefato `START-visual-review` com:
+
+- PNG de cada tela, em resolução do simulador;
+- `START-contact-sheet.png` com todas as telas numa montagem;
+- `START-session.mp4` com a navegação e a rolagem 3D do dado.
+
+O modo de screenshot usa um resultado controlado para facilitar a revisão; o app normal continua sorteando aleatoriamente.
