@@ -11,7 +11,7 @@ final class STARTScreenshotTests: XCTestCase {
     }
 
     private func shot(_ name: String) {
-        let s = app.screenshot()
+        let s = XCUIScreen.main.screenshot()
         let a = XCTAttachment(screenshot: s)
         a.name = name
         a.lifetime = .keepAlways

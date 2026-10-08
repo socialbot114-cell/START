@@ -72,6 +72,8 @@ struct ContentView: View {
             Text("Decida quem começa, role dados e sorteie critérios. Tudo offline.")
                 .font(.subheadline)
                 .foregroundColor(Theme.mutedText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityIdentifier("home-header")
     }

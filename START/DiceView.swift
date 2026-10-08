@@ -11,13 +11,24 @@ struct DiceView: View {
                 Text("Escolha o dado e role. Offline e imediato.")
                     .font(.subheadline)
                     .foregroundColor(Theme.mutedText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                Picker("Dado", selection: $sides) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     ForEach(Dice.allCases) { d in
-                        Text(d.label).tag(d.rawValue)
+                        Button(d.label) { sides = d.rawValue }
+                            .font(.headline)
+                            .foregroundColor(sides == d.rawValue ? Theme.accentText : .white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(sides == d.rawValue ? Theme.accent : Theme.card)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(sides == d.rawValue ? Theme.accent : Theme.cardBorder, lineWidth: 1)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
-                .pickerStyle(.segmented)
                 .accessibilityIdentifier("dice-picker")
 
                 Text("\(result)")

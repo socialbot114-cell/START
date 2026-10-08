@@ -11,6 +11,8 @@ struct FingerPickerView: View {
             Text("Todos colocam o dedo na tela. O START escolhe alguém de forma visual e divertida.")
                 .font(.subheadline)
                 .foregroundColor(Theme.mutedText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 16)
 
             ZStack {

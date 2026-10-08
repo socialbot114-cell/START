@@ -10,6 +10,8 @@ struct SituationDeckView: View {
                 Text("Sorteie um critério. O grupo identifica a pessoa. Se não houver resposta única, tire outra carta.")
                     .font(.subheadline)
                     .foregroundColor(Theme.mutedText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 VStack(spacing: 12) {
                     Text("CARTA \(min(index + 1, deck.count)) DE \(deck.count)")

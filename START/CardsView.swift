@@ -11,6 +11,8 @@ struct CardsView: View {
                 Text("Cada jogador tira uma carta. A maior vence. Empate = nova rodada só com os empatados.")
                     .font(.subheadline)
                     .foregroundColor(Theme.mutedText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 if draws.isEmpty {
                     Text("Toque em distribuir para começar.")
