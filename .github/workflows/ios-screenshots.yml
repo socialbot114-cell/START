@@ -61,17 +61,30 @@ jobs:
       - name: Collect screenshots
         if: always()
         run: |
-          mkdir -p shots
+          mkdir -p shots exported
           echo "Searching DerivedData for screenshots..."
           find DerivedData -type f -name "*.png" | head -n 100 || true
           find DerivedData -type f -name "*.png" -exec cp {} shots/ \; || true
-          echo "Searching for XCT attachments..."
-          find ~/Library/Developer/Xcode/DerivedData -type f -name "*.png" -newer START.xcodeproj 2>/dev/null | head -n 20 || true
-          ls -la shots || true
-          # Fallback: direct simctl capture of home screen if UI tests failed
+          XCRESULT=$(find DerivedData/Logs/Test -maxdepth 1 -name "*.xcresult" | head -n 1)
+          echo "XCRESULT=$XCRESULT"
+          if [ -n "$XCRESULT" ]; then
+            echo "Exporting attachments via xcresulttool..."
+            xcrun xcresulttool export --type directory --path "$XCRESULT" --output-path exported || true
+            find exported -type f | head -n 100 || true
+            find exported -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -exec cp {} shots/ \; || true
+            # Rename exported files with index for stable ordering
+            i=0
+            for f in shots/*; do
+              [ -e "$f" ] || continue
+              i=$((i+1))
+              ext="${f##*.}"
+              mv "$f" "shots/$(printf '%02d' $i)-shot.$ext" || true
+            done
+          fi
+          ls -lh shots || true
           if [ -z "$(ls -A shots 2>/dev/null)" ]; then
-            echo "No attachments found, taking direct simulator shot"
-            xcrun simctl io "$UDID" screenshot shots/00-simulator-fallback.png || true
+            echo "WARNING: no screenshots exported from xcresult"
+            xcrun simctl io booted screenshot shots/00-simulator-fallback.png || true
           fi
           ls -lh shots || true
 
