@@ -7,50 +7,47 @@ struct FingerPickerView: View {
     @State private var status: String = "Coloquem seus dedos na tela..."
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Todos colocam o dedo na tela. O START escolhe alguém de forma visual e divertida.")
-                .font(.subheadline)
-                .foregroundColor(Theme.mutedText)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 16)
+        ScrollView {
+            VStack(spacing: 16) {
+                Text("Todos colocam o dedo na tela. O START escolhe alguém de forma visual e divertida.")
+                    .font(.subheadline)
+                    .foregroundColor(Theme.mutedText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            ZStack {
-                MultiTouchView(winnerIndex: $winnerIndex, touchCount: $touchCount, status: $status)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Theme.card)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
-                    .accessibilityIdentifier("finger-area")
+                ZStack {
+                    MultiTouchView(winnerIndex: $winnerIndex, touchCount: $touchCount, status: $status)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Theme.card)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                        .accessibilityIdentifier("finger-area")
 
-                VStack(spacing: 8) {
-                    Text(status)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .accessibilityIdentifier("finger-result")
-                    if touchCount > 0 {
-                        Text("\(touchCount) dedo(s) na tela")
-                            .font(.caption)
-                            .foregroundColor(Theme.mutedText)
+                    VStack(spacing: 8) {
+                        Text(status)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .accessibilityIdentifier("finger-result")
+                        if touchCount > 0 {
+                            Text("\(touchCount) dedo(s) na tela")
+                                .font(.caption)
+                                .foregroundColor(Theme.mutedText)
+                        }
                     }
+                    .padding()
                 }
-                .padding()
-            }
-            .padding(.horizontal, 16)
-            .frame(minHeight: 380)
+                .frame(minHeight: 380)
 
-            Button("Reiniciar") {
-                winnerIndex = nil
-                touchCount = 0
-                status = "Coloquem seus dedos na tela..."
+                Button("Reiniciar") {
+                    winnerIndex = nil
+                    touchCount = 0
+                    status = "Coloquem seus dedos na tela..."
+                }
+                .startPrimaryButton()
+                .accessibilityIdentifier("finger-reset")
             }
-            .startPrimaryButton()
-            .padding(.horizontal, 16)
-            .accessibilityIdentifier("finger-reset")
-
-            Spacer()
+            .padding(16)
         }
-        .padding(.top, 12)
         .background(Theme.background.ignoresSafeArea())
         .navigationTitle("Dedos na Tela")
     }

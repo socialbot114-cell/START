@@ -8,6 +8,7 @@ struct STARTApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(players)
+                .preferredColorScheme(.dark)
         }
     }
 }
