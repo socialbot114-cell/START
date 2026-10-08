@@ -10,23 +10,6 @@ final class STARTScreenshotTests: XCTestCase {
         app.launch()
     }
 
-    private func shot(_ name: String) {
-        let s = app.screenshot()
-        let a = XCTAttachment(screenshot: s)
-        a.name = name
-        a.lifetime = .keepAlways
-        add(a)
-        // Also persist to /tmp on the runner Mac (UI tests execute on the host),
-        // so CI can upload them without parsing .xcresult.
-        do {
-            let dir = URL(fileURLWithPath: "/tmp/start-shots", isDirectory: true)
-            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            try s.pngRepresentation.write(to: dir.appendingPathComponent("\(name).png"))
-        } catch {
-            print("shot save failed: \(error)")
-        }
-    }
-
     private func goBackIfNeeded() {
         let back = app.buttons["Voltar"]
         if back.exists {
@@ -34,9 +17,8 @@ final class STARTScreenshotTests: XCTestCase {
         }
     }
 
-    func testScreenshots() throws {
+    func testMVPInteractions() throws {
         XCTAssertTrue(app.staticTexts["Todo jogo tem uma grande história."].waitForExistence(timeout: 10))
-        shot("01-home")
         XCTAssertTrue(app.buttons["mode-dice"].isHittable)
         XCTAssertTrue(app.buttons["mode-finger"].isHittable)
         XCTAssertTrue(app.buttons["mode-cards"].isHittable)
@@ -54,8 +36,6 @@ final class STARTScreenshotTests: XCTestCase {
         let resultLabel = app.descendants(matching: .any)["dice-result"]
         XCTAssertTrue(resultLabel.waitForExistence(timeout: 3))
         XCTAssertTrue(resultLabel.label.contains("4"), "Screenshot mode should settle on the expected D6 face")
-        shot("02-dice")
-
         for sides in [4, 8, 10, 12, 20] {
             app.buttons["die-d\(sides)"].tap()
             app.buttons["roll-dice-button"].tap()
@@ -69,7 +49,6 @@ final class STARTScreenshotTests: XCTestCase {
         app.buttons["mode-finger"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["finger-area"].waitForExistence(timeout: 5))
         sleep(1)
-        shot("03-finger")
         goBackIfNeeded()
 
         // Cards
@@ -78,7 +57,6 @@ final class STARTScreenshotTests: XCTestCase {
         app.buttons["deal-cards-button"].tap()
         sleep(1)
         XCTAssertTrue(app.descendants(matching: .any)["cards-result"].exists)
-        shot("04-cards")
         goBackIfNeeded()
 
         // Situations
@@ -86,6 +64,5 @@ final class STARTScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["confirm-situation-button"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Quem está usando óculos?"].exists)
         sleep(1)
-        shot("05-situations")
     }
 }

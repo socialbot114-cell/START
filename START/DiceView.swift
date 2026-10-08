@@ -10,7 +10,8 @@ struct DiceView: View {
     @State private var hasRolled = false
 
     private let dice = Dice.allCases
-    private let screenshotMode = ProcessInfo.processInfo.arguments.contains("-screenshot-mode")
+    private var launchArguments: [String] { ProcessInfo.processInfo.arguments }
+    private var screenshotMode: Bool { launchArguments.contains("-screenshot-mode") }
     private let columns = [GridItem(.flexible(), spacing: 9), GridItem(.flexible(), spacing: 9), GridItem(.flexible(), spacing: 9)]
 
     var body: some View {
@@ -120,6 +121,11 @@ struct DiceView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.background)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            if launchArguments.contains("-capture-dice"), !hasRolled {
+                roll()
+            }
+        }
     }
 
     private func roll() {

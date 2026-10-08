@@ -10,10 +10,19 @@ enum AppRoute: String, Hashable {
 
 struct ContentView: View {
     @EnvironmentObject private var players: PlayerStore
-    @State private var path: [AppRoute] = []
+    @State private var path: [AppRoute] = ContentView.launchPath()
     @State private var showPlayers = false
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+
+    private static func launchPath() -> [AppRoute] {
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-capture-dice") { return [.dice] }
+        if arguments.contains("-capture-finger") { return [.finger] }
+        if arguments.contains("-capture-cards") { return [.cards] }
+        if arguments.contains("-capture-situations") { return [.situations] }
+        return []
+    }
 
     var body: some View {
         NavigationStack(path: $path) {

@@ -32,7 +32,6 @@ jobs:
           xcrun simctl boot "$UDID" || true
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl status_bar "$UDID" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
-          rm -rf /tmp/start-shots
 
       - name: Build for iOS Simulator
         run: |
@@ -48,13 +47,7 @@ jobs:
       - name: Prepare visual-review folder
         run: mkdir -p visual-review/screenshots visual-review/video
 
-      - name: Record simulator preview
-        run: |
-          xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/video/START-session.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
-          echo $! > "$RUNNER_TEMP/start-video.pid"
-          sleep 2
-
-      - name: Run UI tests and capture each screen
+      - name: Run app interaction tests
         run: |
           set -o pipefail
           xcodebuild \
@@ -63,30 +56,52 @@ jobs:
             -configuration Debug \
             -destination "platform=iOS Simulator,id=$UDID" \
             -derivedDataPath DerivedData \
-            -only-testing:STARTUITests/STARTScreenshotTests/testScreenshots \
+            -only-testing:STARTUITests/STARTScreenshotTests/testMVPInteractions \
             CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY='' \
             test | tee xcodebuild-test.log
 
-      - name: Stop simulator preview recording
+      - name: Capture full-screen iPhone screenshots
         if: always()
         run: |
-          if [ -f "$RUNNER_TEMP/start-video.pid" ]; then
-            kill -INT "$(cat "$RUNNER_TEMP/start-video.pid")" 2>/dev/null || true
-            sleep 3
-          fi
+          capture_screen() {
+            local name="$1"
+            local route="$2"
+            local settle="$3"
+            xcrun simctl terminate "$UDID" com.start.companion 2>/dev/null || true
+            if [ "$route" = home ]; then
+              xcrun simctl launch "$UDID" com.start.companion -screenshot-mode
+            else
+              xcrun simctl launch "$UDID" com.start.companion -screenshot-mode "-capture-$route"
+            fi
+            sleep "$settle"
+            xcrun simctl io "$UDID" screenshot "visual-review/screenshots/$name.png"
+          }
+          capture_screen 01-home home 1
+          capture_screen 02-dice dice 3
+          capture_screen 03-finger finger 1
+          capture_screen 04-cards cards 1
+          capture_screen 05-situations situations 1
 
-      - name: Collect screenshots and test result attachments
+      - name: Record 3D dice preview
         if: always()
         run: |
-          cp /tmp/start-shots/*.png visual-review/screenshots/ 2>/dev/null || true
-          XCRESULT=$(find DerivedData/Logs/Test -maxdepth 1 -name '*.xcresult' -print 2>/dev/null | sort | tail -n 1)
-          if [ -n "$XCRESULT" ]; then
-            mkdir -p "$RUNNER_TEMP/xc-attachments"
-            xcrun xcresulttool export attachments --path "$XCRESULT" --output-path "$RUNNER_TEMP/xc-attachments" || true
-            find "$RUNNER_TEMP/xc-attachments" -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) -exec cp -n {} visual-review/screenshots/ \; || true
-          fi
-          if [ -z "$(ls -A visual-review/screenshots 2>/dev/null)" ]; then
-            echo 'No UI-test screenshots were found.' > visual-review/SCREENSHOTS-MISSING.txt
+          xcrun simctl terminate "$UDID" com.start.companion 2>/dev/null || true
+          xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/video/START-session.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
+          VIDEO_PID=$!
+          sleep 1
+          xcrun simctl launch "$UDID" com.start.companion -screenshot-mode -capture-dice
+          sleep 4
+          kill -INT "$VIDEO_PID" 2>/dev/null || true
+          wait "$VIDEO_PID" 2>/dev/null || true
+          sleep 2
+
+      - name: Check screenshot files
+        if: always()
+        run: |
+          count=$(find visual-review/screenshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')
+          echo "Captured $count full-screen PNGs."
+          if [ "$count" -ne 5 ]; then
+            echo "Expected 5 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
           fi
           find visual-review -maxdepth 2 -type f -print
 

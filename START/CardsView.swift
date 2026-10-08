@@ -88,7 +88,7 @@ struct CardsView: View {
         .background(Theme.background)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            if screenshotMode, draws.isEmpty { deal() }
+            if ProcessInfo.processInfo.arguments.contains("-capture-cards"), draws.isEmpty { deal() }
         }
     }
 
