@@ -69,7 +69,7 @@ jobs:
           echo "XCRESULT=$XCRESULT"
           if [ -n "$XCRESULT" ]; then
             echo "Exporting attachments via xcresulttool..."
-            xcrun xcresulttool export --type directory --path "$XCRESULT" --output-path exported || true
+            xcrun xcresulttool export object --legacy --type directory --path "$XCRESULT" --output-path exported || xcrun xcresulttool export --legacy --type directory --path "$XCRESULT" --output-path exported || true
             find exported -type f | head -n 100 || true
             find exported -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -exec cp {} shots/ \; || true
             # Rename exported files with index for stable ordering
