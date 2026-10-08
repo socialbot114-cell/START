@@ -8,6 +8,7 @@ struct STARTApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(players)
+                .frame(minWidth: UIScreen.main.bounds.width, minHeight: UIScreen.main.bounds.height)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Theme.background.ignoresSafeArea())
                 .preferredColorScheme(.dark)
