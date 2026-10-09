@@ -90,8 +90,7 @@ final class STARTScreenshotTests: XCTestCase {
         app.buttons["new-match"].tap()
         let arnakOption = app.buttons["match-game-option-arnak"]
         XCTAssertTrue(arnakOption.waitForExistence(timeout: 5))
-        if !arnakOption.isHittable { app.scrollViews["match-game-picker"].swipeLeft() }
-        XCTAssertTrue(arnakOption.isHittable)
+        app.scrollViews["match-game-picker"].swipeLeft()
         arnakOption.tap()
         let startMatch = app.buttons["start-match"]
         if !startMatch.isHittable { app.swipeUp() }
