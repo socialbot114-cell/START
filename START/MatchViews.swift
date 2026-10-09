@@ -332,6 +332,7 @@ struct MatchSetupView: View {
                 .padding(.horizontal, 20)
             }
             .scrollIndicators(.hidden)
+            .accessibilityIdentifier("match-game-picker")
         }
     }
 
