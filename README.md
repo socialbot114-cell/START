@@ -1,6 +1,6 @@
 # START — Your Board Game Companion
 
-MVP nativo para iOS, feito em SwiftUI e utilizável offline. A linguagem visual parte da referência de mesa de jogos: madeira escura, painéis verdes/carvão e detalhes dourados.
+App nativo para iOS, feito em SwiftUI e utilizável offline. A linguagem visual parte da referência de mesa de jogos: madeira escura, painéis verdes/carvão e detalhes dourados.
 
 ## Ferramentas
 
@@ -8,13 +8,20 @@ MVP nativo para iOS, feito em SwiftUI e utilizável offline. A linguagem visual 
 - **Carta mais alta:** usa um baralho padrão de 52 cartas sem repetição dentro da rodada, com desempate.
 - **Dedos na tela:** sorteia entre toques simultâneos mantidos por 2 segundos.
 - **Cartas de situação:** sorteia critérios offline e deixa o grupo selecionar quem começa.
+- **Roletas locais:** roleta para escolher um jogo, roletas personalizadas com edição e histórico de giros, além de templates editáveis.
+- **Partidas e rankings:** grupos de jogadores, partidas retomáveis, placar com desfazer/correção, cronômetro total, timer de turno, resultados e rankings por jogo/grupo.
+- **Dados locais:** grupos, roletas, giros e partidas são guardados no armazenamento local do app; não há conta nem sincronização nesta versão.
 
 ## Revisão visual pelo GitHub Actions
 
 O workflow **iOS build + visual review** roda no simulador de iPhone e publica dois artefatos separados para facilitar a revisão:
 
-- `START-prints`: PNG de cada tela, montagem geral e `START-dice-blender-preview.png` renderizado no Blender;
-- `START-dice-preview`: vídeo `START-session.mp4` com a navegação e a rolagem 3D do dado.
+- `START-prints`: PNG das telas do app e dos seis dados, montagens geral e de dados, e `START-dice-blender-preview.png` renderizado no Blender;
+- `START-all-dice-reel`: `START-all-dice.mp4` com os seis dados rolando em sequência.
+
+## Roadmap
+
+O plano do produto, arquitetura de dados e fases de evolução estão em [`ROADMAP.md`](ROADMAP.md).
 
 O modo de screenshot usa um resultado controlado para facilitar a revisão; o app normal continua sorteando aleatoriamente.
 

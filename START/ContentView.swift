@@ -6,6 +6,11 @@ enum AppRoute: String, Hashable {
     case finger
     case cards
     case situations
+    case wheels
+    case wheel
+    case matches
+    case ranking
+    case liveMatch
 }
 
 struct ContentView: View {
@@ -17,6 +22,13 @@ struct ContentView: View {
 
     private static func launchPath() -> [AppRoute] {
         let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-capture-wheels") { return [.wheels] }
+        if arguments.contains("-capture-wheel") { return [.wheel] }
+        if arguments.contains("-capture-matches") { return [.matches] }
+        if arguments.contains("-capture-live-match") { return [.liveMatch] }
+        if arguments.contains("-capture-ranking") { return [.ranking] }
+        if arguments.contains("-capture-history") { return [.matches] }
+        if arguments.contains("-capture-templates") { return [.wheels] }
         if arguments.contains("-capture-dice-reel") || arguments.contains(where: { $0.hasPrefix("-capture-die-") }) { return [.dice] }
         if arguments.contains("-capture-dice") { return [.dice] }
         if arguments.contains("-capture-finger") { return [.finger] }
@@ -102,6 +114,20 @@ struct ContentView: View {
                         CardsView()
                     case .situations:
                         SituationDeckView()
+                    case .wheels:
+                        WheelsLibraryView()
+                    case .wheel:
+                        WheelPlayView(wheelID: nil)
+                    case .matches:
+                        MatchCenterView()
+                    case .ranking:
+                        RankingView()
+                    case .liveMatch:
+                        if let match = players.activeMatches.first {
+                            LiveMatchView(matchID: match.id)
+                        } else {
+                            MatchCenterView()
+                        }
                     }
                 }
             }
@@ -129,6 +155,26 @@ struct ContentView: View {
                     .padding(.leading, 4)
             }
             Spacer()
+            NavigationLink(value: AppRoute.wheels) {
+                Image(systemName: "circle.grid.2x2.fill")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(Theme.accent)
+                    .frame(width: 38, height: 38)
+                    .background(.black.opacity(0.42), in: Circle())
+                    .overlay(Circle().stroke(.white.opacity(0.14), lineWidth: 1))
+            }
+            .accessibilityLabel("Roletas e jogos")
+            .accessibilityIdentifier("home-wheels")
+            NavigationLink(value: AppRoute.matches) {
+                Image(systemName: "stopwatch.fill")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(Theme.accent)
+                    .frame(width: 38, height: 38)
+                    .background(.black.opacity(0.42), in: Circle())
+                    .overlay(Circle().stroke(.white.opacity(0.14), lineWidth: 1))
+            }
+            .accessibilityLabel("Partidas e ranking")
+            .accessibilityIdentifier("home-matches")
             Button { showPlayers = true } label: {
                 Image(systemName: "person.2.fill")
                     .font(.system(size: 16, weight: .semibold))
@@ -325,6 +371,7 @@ struct PlayerManagerView: View {
     @EnvironmentObject private var players: PlayerStore
     @Environment(\.dismiss) private var dismiss
     @State private var newName = ""
+    @State private var newGroupName = ""
     @AppStorage("start.effects.enabled") private var effectsEnabled = true
 
     var body: some View {
@@ -336,6 +383,65 @@ struct PlayerManagerView: View {
                         Text("Quem está na mesa?")
                             .font(.system(size: 23, weight: .heavy, design: .rounded))
                             .foregroundColor(.white)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("MESAS LOCAIS")
+                                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                    .tracking(1.1)
+                                    .foregroundColor(Theme.accent)
+                                Spacer()
+                                Text("\(players.data.groups.count) grupos")
+                                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                                    .foregroundColor(Theme.mutedText)
+                            }
+                            ForEach(players.data.groups) { group in
+                                HStack(spacing: 8) {
+                                    Button {
+                                        players.selectGroup(group.id)
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: group.id == players.activeGroup.id ? "checkmark.circle.fill" : "circle")
+                                                .foregroundColor(group.id == players.activeGroup.id ? Theme.accent : .white.opacity(0.38))
+                                            Text(group.name)
+                                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                                                .foregroundColor(.white)
+                                            Spacer()
+                                            Text("\(group.players.count) jogadores")
+                                                .font(.system(size: 9, weight: .medium, design: .rounded))
+                                                .foregroundColor(Theme.mutedText)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityIdentifier("select-group-\(group.id.uuidString)")
+                                    if players.data.groups.count > 1 && !players.data.matches.contains(where: { $0.groupID == group.id }) {
+                                        Button {
+                                            players.deleteGroup(group.id)
+                                        } label: {
+                                            Image(systemName: "trash.fill").font(.system(size: 11)).foregroundColor(.red.opacity(0.82))
+                                        }
+                                        .accessibilityLabel("Apagar grupo \(group.name)")
+                                    }
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 8)
+                                .background(.black.opacity(0.37), in: RoundedRectangle(cornerRadius: 11))
+                            }
+                            HStack(spacing: 8) {
+                                TextField("Nome da nova mesa", text: $newGroupName)
+                                    .textFieldStyle(.roundedBorder)
+                                    .accessibilityIdentifier("new-group-name")
+                                Button("Criar") {
+                                    if players.createGroup(name: newGroupName) != nil { newGroupName = "" }
+                                }
+                                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                .foregroundColor(Theme.accentText)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .background(Theme.accent, in: RoundedRectangle(cornerRadius: 10))
+                                .accessibilityIdentifier("create-group")
+                            }
+                        }
 
                         Toggle(isOn: $effectsEnabled) {
                             HStack(spacing: 10) {
@@ -370,7 +476,7 @@ struct PlayerManagerView: View {
                                 Text(name).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.white)
                                 Spacer()
                                 Button {
-                                    players.players.remove(at: index)
+                                    players.remove(at: IndexSet(integer: index))
                                 } label: {
                                     Image(systemName: "minus.circle.fill").foregroundColor(.white.opacity(0.48))
                                 }

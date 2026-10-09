@@ -1,25 +1,4 @@
 import Foundation
-import Combine
-
-final class PlayerStore: ObservableObject {
-    @Published var players: [String] = ["Ana", "Carlos", "Pedro", "Júlia"]
-
-    var displayNames: [String] {
-        if players.isEmpty { return ["Jogador 1", "Jogador 2"] }
-        if players.count == 1 { return players + ["Jogador 2"] }
-        return players
-    }
-
-    func add(name: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        players.append(trimmed)
-    }
-
-    func remove(at offsets: IndexSet) {
-        players.remove(atOffsets: offsets)
-    }
-}
 
 enum Dice: Int, CaseIterable, Identifiable {
     case d4 = 4, d6 = 6, d8 = 8, d10 = 10, d12 = 12, d20 = 20

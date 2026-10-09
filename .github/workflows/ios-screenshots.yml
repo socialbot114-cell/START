@@ -61,6 +61,9 @@ jobs:
             -derivedDataPath DerivedData \
             -only-testing:STARTUITests/STARTScreenshotTests/testFirstLaunchOnboarding \
             -only-testing:STARTUITests/STARTScreenshotTests/testDiceGalleryCaptureResults \
+            -only-testing:STARTUITests/STARTScreenshotTests/testRouletteTemplatesCanBeInstalledAndSpun \
+            -only-testing:STARTUITests/STARTScreenshotTests/testCustomWheelPersistsAfterRelaunch \
+            -only-testing:STARTUITests/STARTScreenshotTests/testLiveMatchUpdatesLocalRankingAndHistory \
             -only-testing:STARTUITests/STARTScreenshotTests/testMVPInteractions \
             CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY='' \
             test | tee xcodebuild-test.log
@@ -91,6 +94,13 @@ jobs:
           capture_screen 04-cards cards 2
           capture_screen 05-full-deck full-deck 1
           capture_screen 06-situations situations 1
+          capture_screen 07-wheels wheels 1
+          capture_screen 08-wheel wheel 1
+          capture_screen 09-matches matches 1
+          capture_screen 10-live-match live-match 1
+          capture_screen 11-ranking ranking 1
+          capture_screen 12-history history 1
+          capture_screen 13-templates templates 1
 
           capture_die_frame() {
             local sides="$1"
@@ -123,8 +133,8 @@ jobs:
           mkdir -p visual-review/screenshots visual-review/dice-rolls
           count=$(find visual-review/screenshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')
           echo "Captured $count full-screen PNGs."
-          if [ "$count" -ne 7 ]; then
-            echo "Expected 7 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
+          if [ "$count" -ne 14 ]; then
+            echo "Expected 14 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
           fi
           dice_count=$(find visual-review/dice-rolls -maxdepth 1 -type f -name 'D*.png' | wc -l | tr -d ' ')
           echo "Captured $dice_count die-result PNGs."

@@ -6,7 +6,7 @@ final class STARTScreenshotTests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["-ui-testing", "-screenshot-mode"]
+        app.launchArguments = ["-ui-testing", "-screenshot-mode", "-reset-local-data"]
         app.launch()
     }
 
@@ -19,7 +19,7 @@ final class STARTScreenshotTests: XCTestCase {
 
     func testFirstLaunchOnboarding() throws {
         app.terminate()
-        app.launchArguments = ["-ui-testing", "-reset-onboarding"]
+        app.launchArguments = ["-ui-testing", "-reset-onboarding", "-reset-local-data"]
         app.launch()
 
         XCTAssertTrue(app.staticTexts["A primeira vez é no acaso."].waitForExistence(timeout: 10))
@@ -43,6 +43,91 @@ final class STARTScreenshotTests: XCTestCase {
             XCTAssertEqual(Int(result.label), capture.result, "D\(capture.sides) capture should use its stable face")
             app.terminate()
         }
+    }
+
+    func testRouletteTemplatesCanBeInstalledAndSpun() throws {
+        app.buttons["home-wheels"].tap()
+        XCTAssertTrue(app.staticTexts["Roletas da mesa"].waitForExistence(timeout: 5))
+
+        let templateTab = app.segmentedControls["wheel-library-picker"].buttons["Templates"]
+        XCTAssertTrue(templateTab.waitForExistence(timeout: 3))
+        templateTab.tap()
+        let installArnak = app.buttons["install-template-arnak-leaders"]
+        XCTAssertTrue(installArnak.waitForExistence(timeout: 3))
+        installArnak.tap()
+
+        app.segmentedControls["wheel-library-picker"].buttons["Minhas roletas"].tap()
+        let arnakWheel = app.staticTexts["Líderes da expedição"]
+        XCTAssertTrue(arnakWheel.waitForExistence(timeout: 3))
+        arnakWheel.tap()
+
+        let spinButton = app.buttons["spin-wheel"]
+        XCTAssertTrue(spinButton.waitForExistence(timeout: 3))
+        spinButton.tap()
+        XCTAssertTrue(app.staticTexts["wheel-selected-result"].waitForExistence(timeout: 8))
+    }
+
+    func testCustomWheelPersistsAfterRelaunch() throws {
+        app.buttons["home-wheels"].tap()
+        app.buttons["create-wheel"].tap()
+        let titleField = app.textFields["wheel-title-field"]
+        XCTAssertTrue(titleField.waitForExistence(timeout: 3))
+        titleField.tap()
+        titleField.typeText("Noite de jogos")
+        app.buttons["save-wheel"].tap()
+        XCTAssertTrue(app.staticTexts["Noite de jogos"].waitForExistence(timeout: 5))
+
+        app.terminate()
+        app.launchArguments = ["-ui-testing", "-screenshot-mode"]
+        app.launch()
+        app.buttons["home-wheels"].tap()
+        XCTAssertTrue(app.staticTexts["Noite de jogos"].waitForExistence(timeout: 5))
+    }
+
+    func testLiveMatchUpdatesLocalRankingAndHistory() throws {
+        app.buttons["home-matches"].tap()
+        XCTAssertTrue(app.buttons["new-match"].waitForExistence(timeout: 5))
+        app.buttons["new-match"].tap()
+        XCTAssertTrue(app.buttons["match-game-option-arnak"].waitForExistence(timeout: 5))
+        app.buttons["match-game-option-arnak"].tap()
+        let startMatch = app.buttons["start-match"]
+        if !startMatch.isHittable { app.swipeUp() }
+        startMatch.tap()
+
+        let scoreButton = app.buttons["score-plus-0"]
+        XCTAssertTrue(scoreButton.waitForExistence(timeout: 5))
+        scoreButton.tap()
+        app.buttons["toggle-turn-timer"].tap()
+        XCTAssertTrue(app.staticTexts["turn-timer-value"].waitForExistence(timeout: 3))
+
+        app.terminate()
+        app.launchArguments = ["-ui-testing", "-screenshot-mode"]
+        app.launch()
+        app.buttons["home-matches"].tap()
+        let liveMatchRow = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "live-match-")).firstMatch
+        XCTAssertTrue(liveMatchRow.waitForExistence(timeout: 5))
+        liveMatchRow.tap()
+        XCTAssertEqual(app.staticTexts["score-value-0"].label, "1")
+        XCTAssertNotEqual(app.staticTexts["turn-timer-value"].label, "--:--")
+
+        let finishMatch = app.buttons["finish-match"]
+        if !finishMatch.isHittable { app.swipeUp() }
+        finishMatch.tap()
+        XCTAssertTrue(app.buttons["confirm-match-result"].waitForExistence(timeout: 3))
+        app.buttons["confirm-match-result"].tap()
+        XCTAssertTrue(app.staticTexts["PARTIDA ENCERRADA"].waitForExistence(timeout: 5))
+
+        app.buttons["view-match-ranking"].tap()
+        XCTAssertTrue(app.staticTexts["ARNAK"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Ana"].exists)
+        XCTAssertTrue(app.staticTexts["1·0·0"].exists, "The completed result should count as one win")
+
+        app.terminate()
+        app.launchArguments = ["-ui-testing", "-screenshot-mode"]
+        app.launch()
+        app.buttons["home-matches"].tap()
+        app.segmentedControls["match-center-picker"].buttons["Histórico"].tap()
+        XCTAssertTrue(app.staticTexts["Arnak"].waitForExistence(timeout: 5))
     }
 
     func testMVPInteractions() throws {
