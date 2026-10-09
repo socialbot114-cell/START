@@ -31,6 +31,9 @@ final class STARTScreenshotTests: XCTestCase {
         // Dice
         app.buttons["mode-dice"].tap()
         XCTAssertTrue(app.buttons["roll-dice-button"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["die-d4"].isHittable, "The first die option should be visible without scrolling")
+        XCTAssertTrue(app.buttons["die-d20"].isHittable, "The last die option should be visible without scrolling")
+        XCTAssertTrue(app.buttons["roll-dice-button"].isHittable, "The roll action should be visible without scrolling")
         app.buttons["roll-dice-button"].tap()
         sleep(3)
         let resultLabel = app.descendants(matching: .any)["dice-result"]
