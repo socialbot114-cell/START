@@ -34,6 +34,7 @@ jobs:
           xcrun simctl status_bar "$UDID" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
 
       - name: Build for iOS Simulator
+        id: build
         run: |
           xcodebuild \
             -project START.xcodeproj \
@@ -63,7 +64,7 @@ jobs:
             test | tee xcodebuild-test.log
 
       - name: Capture full-screen iPhone screenshots
-        if: always()
+        if: always() && steps.build.outcome == 'success'
         run: |
           mkdir -p visual-review/screenshots visual-review/video
           capture_screen() {
@@ -86,7 +87,7 @@ jobs:
           capture_screen 05-situations situations 1
 
       - name: Record 3D dice preview
-        if: always()
+        if: always() && steps.build.outcome == 'success'
         run: |
           mkdir -p visual-review/video
           xcrun simctl terminate "$UDID" com.start.companion 2>/dev/null || true

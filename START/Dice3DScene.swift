@@ -183,7 +183,7 @@ private enum DiceGeometry {
         let softbox = SCNLight()
         softbox.type = .area
         softbox.intensity = 720
-        softbox.areaExtents = SCNVector3(3.2, 2.4, 0)
+        softbox.areaExtents = SIMD3<Float>(3.2, 2.4, 0)
         softbox.color = UIColor(red: 0.92, green: 0.95, blue: 1.0, alpha: 1)
         softbox.castsShadow = false
         let softboxNode = SCNNode()
