@@ -17,6 +17,7 @@ struct ContentView: View {
 
     private static func launchPath() -> [AppRoute] {
         let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-capture-dice-reel") || arguments.contains(where: { $0.hasPrefix("-capture-die-") }) { return [.dice] }
         if arguments.contains("-capture-dice") { return [.dice] }
         if arguments.contains("-capture-finger") { return [.finger] }
         if arguments.contains("-capture-cards") { return [.cards] }

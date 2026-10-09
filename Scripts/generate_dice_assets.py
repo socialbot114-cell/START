@@ -16,7 +16,6 @@ import sys
 from itertools import combinations
 
 import bpy
-import bmesh
 from mathutils import Vector
 
 
@@ -189,14 +188,14 @@ def principled_material(name, color, roughness=0.22, metallic=0.02, coat=0.75, m
         rough_map = nodes.new("ShaderNodeMapRange")
         rough_map.inputs["From Min"].default_value = 0.0
         rough_map.inputs["From Max"].default_value = 1.0
-        rough_map.inputs["To Min"].default_value = max(0.12, roughness - 0.035)
-        rough_map.inputs["To Max"].default_value = min(0.38, roughness + 0.04)
+        rough_map.inputs["To Min"].default_value = max(0.16, roughness - 0.025)
+        rough_map.inputs["To Max"].default_value = min(0.36, roughness + 0.025)
         links.new(tex.outputs["Color"], rough_map.inputs["Value"])
         links.new(rough_map.outputs["Result"], bsdf.inputs["Roughness"])
 
         bump = nodes.new("ShaderNodeBump")
-        bump.inputs["Strength"].default_value = 0.08
-        bump.inputs["Distance"].default_value = 0.0015
+        bump.inputs["Strength"].default_value = 0.035
+        bump.inputs["Distance"].default_value = 0.0008
         links.new(tex.outputs["Color"], bump.inputs["Height"])
         links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
     return mat
@@ -208,21 +207,12 @@ def create_micrograin_image():
     image = bpy.data.images.new("START - Molded resin micrograin", width=width, height=height, alpha=False, float_buffer=False)
     pixels = []
     for _ in range(width * height):
-        value = 0.5 + rng.uniform(-0.09, 0.09)
+        value = 0.5 + rng.uniform(-0.035, 0.035)
         pixels.extend((value, value, value, 1.0))
     image.pixels.foreach_set(pixels)
     image.colorspace_settings.name = "Non-Color"
     image.pack()
     return image
-
-
-def clear_scene():
-    bpy.ops.object.select_all(action="SELECT")
-    bpy.ops.object.delete(use_global=False)
-    for block_collection in (bpy.data.meshes, bpy.data.curves, bpy.data.materials, bpy.data.cameras, bpy.data.lights):
-        for block in list(block_collection):
-            if block.users == 0:
-                block_collection.remove(block)
 
 
 def link_object(name, data, collection, parent=None):
@@ -247,8 +237,8 @@ def create_text(label, name, position, normal, size, material, collection, paren
     curve = bpy.data.curves.new(name, type="FONT")
     curve.body = str(label)
     curve.size = size
-    curve.extrude = 0.006
-    curve.bevel_depth = 0.0015
+    curve.extrude = 0.002
+    curve.bevel_depth = 0.0007
     curve.bevel_resolution = 3
     curve.align_x = "CENTER"
     curve.align_y = "CENTER"
@@ -256,7 +246,7 @@ def create_text(label, name, position, normal, size, material, collection, paren
         curve.font = font
     curve.materials.append(material)
     obj = link_object(name, curve, collection, parent)
-    obj.location = position + normal * 0.012
+    obj.location = position + normal * 0.001
     obj.rotation_mode = "QUATERNION"
     obj.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(normal)
     bpy.ops.object.select_all(action="DESELECT")
@@ -266,7 +256,7 @@ def create_text(label, name, position, normal, size, material, collection, paren
     return bpy.context.view_layer.objects.active
 
 
-def create_pip(value, face, vertices, material, collection, parent):
+def pip_layout(value, face, vertices):
     center = face["center"]
     normal = face["normal"]
     edge = min(
@@ -285,19 +275,70 @@ def create_pip(value, face, vertices, material, collection, parent):
         6: [(-offset, -offset), (0, -offset), (offset, -offset), (-offset, offset), (0, offset), (offset, offset)]
     }[value]
 
-    radius = min(0.057, edge * 0.049)
+    return center, normal, u, v, positions, min(0.057, edge * 0.049)
+
+
+def cut_d6_pip_recesses(body, faces, vertices):
+    cutters = []
+    for value, face in enumerate(faces, 1):
+        center, normal, u, v, positions, radius = pip_layout(value, face, vertices)
+        for x, y in positions:
+            location = center - normal * 0.012 + u * x + v * y
+            bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=radius, depth=0.05, location=location)
+            cutter = bpy.context.object
+            cutter.name = f"D6_PipCutter_{value:02d}_{len(cutters) + 1:02d}"
+            cutter.rotation_mode = "QUATERNION"
+            cutter.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(normal)
+            cutters.append(cutter)
+
+    bpy.ops.object.select_all(action="DESELECT")
+    for cutter in cutters:
+        cutter.select_set(True)
+    bpy.context.view_layer.objects.active = cutters[0]
+    bpy.ops.object.join()
+    cutter_mesh = bpy.context.object
+    cutter_mesh.name = "D6_PipRecessCutters"
+
+    bpy.ops.object.select_all(action="DESELECT")
+    body.select_set(True)
+    bpy.context.view_layer.objects.active = body
+    recess = body.modifiers.new("Recessed pip wells", "BOOLEAN")
+    recess.operation = "DIFFERENCE"
+    recess.solver = "EXACT"
+    recess.object = cutter_mesh
+    bpy.ops.object.modifier_apply(modifier=recess.name)
+    cutter_data = cutter_mesh.data
+    bpy.data.objects.remove(cutter_mesh, do_unlink=True)
+    if cutter_data.users == 0:
+        bpy.data.meshes.remove(cutter_data)
+
+    bpy.ops.object.select_all(action="DESELECT")
+    body.select_set(True)
+    bpy.context.view_layer.objects.active = body
+    rim = body.modifiers.new("Soft pip-well rims", "BEVEL")
+    rim.width = 0.0025
+    rim.segments = 3
+    rim.limit_method = "ANGLE"
+    rim.angle_limit = math.radians(30)
+    bpy.context.view_layer.objects.active = body
+    bpy.ops.object.modifier_apply(modifier=rim.name)
+
+
+def create_pip(value, face, vertices, material, collection, parent):
+    center, normal, u, v, positions, radius = pip_layout(value, face, vertices)
     for dot_index, (x, y) in enumerate(positions, 1):
-        location = center + normal * 0.004 + u * x + v * y
-        bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=radius, depth=0.014, location=location)
+        # The dark insert sits just below the face, inside the boolean-cut well.
+        location = center - normal * 0.0075 + u * x + v * y
+        bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=radius * 0.88, depth=0.014, location=location)
         pip = bpy.context.object
         pip.name = f"D6_Pip_{value}_{dot_index:02d}"
         pip.rotation_mode = "QUATERNION"
         pip.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(normal)
         pip.data.materials.append(material)
         for polygon in pip.data.polygons:
-            polygon.use_smooth = True
-        bevel = pip.modifiers.new("Rounded ink edge", "BEVEL")
-        bevel.width = 0.004
+            polygon.use_smooth = len(polygon.vertices) == 4
+        bevel = pip.modifiers.new("Soft ink insert edge", "BEVEL")
+        bevel.width = 0.0015
         bevel.segments = 3
         bpy.context.view_layer.objects.active = pip
         bpy.ops.object.modifier_apply(modifier=bevel.name)
@@ -321,14 +362,14 @@ def build_die(sides, micrograin, font):
     root.empty_display_type = "PLAIN_AXES"
 
     base_color = RESIN_COLORS[sides]
-    variations = [0.96, 1.04, 0.99, 1.06]
+    variations = [0.99, 1.0, 1.008, 1.015]
     body_materials = []
     for index, factor in enumerate(variations):
         color = tuple(min(1.0, component * factor) for component in base_color[:3]) + (1.0,)
-        mat = principled_material(f"D{sides} - Satin resin {index + 1}", color, roughness=0.22, metallic=0.025, coat=0.78, micrograin=micrograin)
+        mat = principled_material(f"D{sides} - Satin resin {index + 1}", color, roughness=0.25, metallic=0.0, coat=0.62, micrograin=micrograin)
         body_materials.append(mat)
-    edge_color = tuple(min(1.0, c * 1.16 + 0.035) for c in base_color[:3]) + (1.0,)
-    edge_material = principled_material(f"D{sides} - Molded bevel", edge_color, roughness=0.18, metallic=0.02, coat=0.62, micrograin=micrograin)
+    edge_color = tuple(min(1.0, c * 1.06 + 0.012) for c in base_color[:3]) + (1.0,)
+    edge_material = principled_material(f"D{sides} - Molded bevel", edge_color, roughness=0.22, metallic=0.0, coat=0.5, micrograin=micrograin)
 
     mesh = bpy.data.meshes.new(f"D{sides}_ResinMesh")
     mesh.from_pydata([tuple(v) for v in vertices], [], [face["indices"] for face in faces])
@@ -343,7 +384,12 @@ def build_die(sides, micrograin, font):
     assign_uvs(body)
 
     bevel = body.modifiers.new("Precision molded chamfer", "BEVEL")
-    bevel.width = 0.052
+    shortest_edge = min(
+        (vertices[face["indices"][index]] - vertices[face["indices"][(index + 1) % len(face["indices"])] ]).length
+        for face in faces
+        for index in range(len(face["indices"]))
+    )
+    bevel.width = min(0.052, shortest_edge * 0.035)
     bevel.segments = 5
     bevel.profile = 0.52
     bevel.limit_method = "ANGLE"
@@ -352,14 +398,21 @@ def build_die(sides, micrograin, font):
     bevel.harden_normals = True
     bpy.context.view_layer.objects.active = body
     bpy.ops.object.modifier_apply(modifier=bevel.name)
+
+    if sides == 6:
+        cut_d6_pip_recesses(body, faces, vertices)
+
     weighted = body.modifiers.new("Weighted resin normals", "WEIGHTED_NORMAL")
     weighted.keep_sharp = True
     weighted.weight = 50
+    bpy.ops.object.select_all(action="DESELECT")
+    body.select_set(True)
+    bpy.context.view_layer.objects.active = body
     bpy.ops.object.modifier_apply(modifier=weighted.name)
 
-    # Numbers are printed/raised from the face surface; D4 follows real tetrahedral corner numbering.
-    marking_material = principled_material(f"D{sides} - Warm ivory markings", (0.97, 0.92, 0.80, 1.0), roughness=0.27, metallic=0.0, coat=0.32)
-    pip_material = principled_material(f"D6 - Ink-black pips", (0.045, 0.035, 0.027, 1.0), roughness=0.31, metallic=0.0, coat=0.24)
+    # Low-profile ink gives the marks a printed/inlaid finish instead of a toy-like raised look.
+    marking_material = principled_material(f"D{sides} - Warm ivory markings", (0.97, 0.92, 0.80, 1.0), roughness=0.34, metallic=0.0, coat=0.08)
+    pip_material = principled_material(f"D6 - Ink-black pips", (0.045, 0.035, 0.027, 1.0), roughness=0.38, metallic=0.0, coat=0.1)
     if sides == 6:
         for face_index, face in enumerate(faces, 1):
             create_pip(face_index, face, vertices, pip_material, collection, root)
@@ -376,110 +429,6 @@ def build_die(sides, micrograin, font):
     # Keep the imported die centered at origin with a consistent radial size.
     root.location = Vector((0, 0, 0))
     return root, collection, faces, vertices
-
-
-def raw_vertices(sides):
-    if sides == 4:
-        return [Vector(v) for v in [(1, 1, 1), (1, -1, -1), (-1, 1, -1), (-1, -1, 1)]]
-    if sides == 6:
-        return [Vector((x, y, z)) for x in (-1, 1) for y in (-1, 1) for z in (-1, 1)]
-    if sides == 8:
-        return [Vector(v) for v in [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]]
-    if sides == 10:
-        return pentagonal_trapezohedron_vertices()
-    if sides == 12:
-        phi = GOLDEN_RATIO
-        inverse = 1 / phi
-        points = [Vector((x, y, z)) for x in (-1, 1) for y in (-1, 1) for z in (-1, 1)]
-        for sign_a in (-1, 1):
-            for sign_b in (-1, 1):
-                points.extend([
-                    Vector((0, sign_a * inverse, sign_b * phi)),
-                    Vector((sign_a * inverse, sign_b * phi, 0)),
-                    Vector((sign_a * phi, 0, sign_b * inverse))
-                ])
-        return points
-    if sides == 20:
-        phi = GOLDEN_RATIO
-        points = []
-        for a in (-1, 1):
-            for b in (-1, 1):
-                points.extend([Vector((0, a, b * phi)), Vector((a, b * phi, 0)), Vector((b * phi, 0, a))])
-        return points
-    raise ValueError(f"Unsupported D{sides}")
-
-
-def pentagonal_trapezohedron_vertices():
-    tau = math.pi * 2
-    upper = [Vector((math.cos(tau * i / 5), math.sin(tau * i / 5), 0.5)) for i in range(5)]
-    lower = [Vector((math.cos(tau * (i + 0.5) / 5), math.sin(tau * (i + 0.5) / 5), -0.5)) for i in range(5)]
-    faces = [upper, list(reversed(lower))]
-    for i in range(5):
-        faces.append([upper[i], upper[(i + 1) % 5], lower[i]])
-        faces.append([upper[i], lower[i], lower[(i + 4) % 5]])
-    dual = []
-    for polygon in faces:
-        center = sum(polygon, Vector()) / len(polygon)
-        normal = (polygon[1] - polygon[0]).cross(polygon[2] - polygon[0]).normalized()
-        if normal.dot(center) < 0:
-            normal.negate()
-        dual.append(normal / normal.dot(center))
-    return dual
-
-
-def convex_faces(vertices):
-    result = {}
-    for i, j, k in combinations(range(len(vertices)), 3):
-        anchor = vertices[i]
-        normal = (vertices[j] - anchor).cross(vertices[k] - anchor)
-        if normal.length < TOLERANCE:
-            continue
-        normal.normalize()
-        plane = normal.dot(anchor)
-        distances = [normal.dot(v) - plane for v in vertices]
-        positive = any(value > TOLERANCE for value in distances)
-        negative = any(value < -TOLERANCE for value in distances)
-        if positive and negative:
-            continue
-        if positive:
-            normal.negate()
-        coplanar = [index for index, v in enumerate(vertices) if abs(normal.dot(v) - normal.dot(anchor)) <= TOLERANCE]
-        if len(coplanar) < 3:
-            continue
-        key = tuple(sorted(coplanar))
-        if key in result:
-            continue
-        center = sum((vertices[index] for index in coplanar), Vector()) / len(coplanar)
-        u = (vertices[coplanar[0]] - center).normalized()
-        v_axis = normal.cross(u)
-        ordered = sorted(coplanar, key=lambda index: math.atan2((vertices[index] - center).dot(v_axis), (vertices[index] - center).dot(u)))
-        result[key] = {"indices": ordered, "center": center, "normal": normal}
-    return sorted(result.values(), key=lambda f: (round(f["normal"].z, 5), round(f["normal"].y, 5), round(f["normal"].x, 5)))
-
-
-def numbered_faces(faces, sides):
-    if sides == 4 or sides % 2:
-        return faces
-
-    def negative(normal):
-        for component in (normal.z, normal.y, normal.x):
-            if abs(component) > 1e-4:
-                return component < 0
-        return False
-
-    low = sorted((face for face in faces if negative(face["normal"])), key=lambda f: (f["normal"].z, f["normal"].y, f["normal"].x))
-    high = [face for face in faces if not negative(face["normal"])]
-    if len(low) != sides // 2 or len(high) != sides // 2:
-        raise RuntimeError(f"D{sides}: opposite face sets do not match")
-    ordered = [None] * sides
-    for index, face in enumerate(low):
-        opposite_index = min(range(len(high)), key=lambda i: face["normal"].dot(high[i]["normal"]))
-        opposite = high.pop(opposite_index)
-        if face["normal"].dot(opposite["normal"]) > -0.98:
-            raise RuntimeError(f"D{sides}: could not pair opposite faces")
-        ordered[index] = face
-        ordered[sides - index - 1] = opposite
-    return ordered
 
 
 def make_world_material():
@@ -526,8 +475,9 @@ def configure_studio(roots, collections, output_dir):
     world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.12, 0.075, 0.045, 1)
     world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.28
 
+    floor_z = -1.34
     floor_mesh = bpy.data.meshes.new("Walnut floor")
-    floor_mesh.from_pydata([(-100, -100, -1.34), (100, -100, -1.34), (100, 100, -1.34), (-100, 100, -1.34)], [], [(0, 1, 2, 3)])
+    floor_mesh.from_pydata([(-100, -100, floor_z), (100, -100, floor_z), (100, 100, floor_z), (-100, 100, floor_z)], [], [(0, 1, 2, 3)])
     floor_mesh.materials.append(make_world_material())
     floor = link_object("Studio walnut surface", floor_mesh, bpy.context.scene.collection)
 
@@ -557,7 +507,13 @@ def configure_studio(roots, collections, output_dir):
     for index, root in enumerate(roots):
         col = index % 3
         row = index // 3
-        root.location = Vector(((col - 1) * 3.6, (0.5 - row) * 3.7, 0))
+        bpy.context.view_layer.update()
+        lowest_z = min(
+            (obj.matrix_world @ Vector(corner)).z
+            for obj in root.children_recursive
+            for corner in obj.bound_box
+        )
+        root.location = Vector(((col - 1) * 3.6, (0.5 - row) * 3.7, floor_z - lowest_z))
     scene.render.filepath = os.path.join(output_dir, "START-dice-studio.png")
     scene.camera.data.lens = 50
 

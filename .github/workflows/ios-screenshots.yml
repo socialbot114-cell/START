@@ -60,6 +60,7 @@ jobs:
             -destination "platform=iOS Simulator,id=$UDID" \
             -derivedDataPath DerivedData \
             -only-testing:STARTUITests/STARTScreenshotTests/testFirstLaunchOnboarding \
+            -only-testing:STARTUITests/STARTScreenshotTests/testDiceGalleryCaptureResults \
             -only-testing:STARTUITests/STARTScreenshotTests/testMVPInteractions \
             CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY='' \
             test | tee xcodebuild-test.log
@@ -67,7 +68,7 @@ jobs:
       - name: Capture full-screen iPhone screenshots
         if: always() && steps.build.outcome == 'success'
         run: |
-          mkdir -p visual-review/screenshots visual-review/video
+          mkdir -p visual-review/screenshots visual-review/video visual-review/dice-rolls
           capture_screen() {
             local name="$1"
             local route="$2"
@@ -91,16 +92,27 @@ jobs:
           capture_screen 05-full-deck full-deck 1
           capture_screen 06-situations situations 1
 
-      - name: Record 3D dice preview
+          capture_die_frame() {
+            local sides="$1"
+            xcrun simctl terminate "$UDID" com.start.companion 2>/dev/null || true
+            xcrun simctl launch "$UDID" com.start.companion -screenshot-mode "-capture-die-$sides"
+            sleep 3
+            xcrun simctl io "$UDID" screenshot "visual-review/dice-rolls/D$sides.png"
+          }
+          for sides in 4 6 8 10 12 20; do
+            capture_die_frame "$sides"
+          done
+
+      - name: Record all-dice reel
         if: always() && steps.build.outcome == 'success'
         run: |
           mkdir -p visual-review/video
           xcrun simctl terminate "$UDID" com.start.companion 2>/dev/null || true
-          xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/video/START-session.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
+          xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/video/START-all-dice.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
           VIDEO_PID=$!
           sleep 1
-          xcrun simctl launch "$UDID" com.start.companion -screenshot-mode -capture-dice
-          sleep 4
+          xcrun simctl launch "$UDID" com.start.companion -capture-dice-reel
+          sleep 22
           kill -INT "$VIDEO_PID" 2>/dev/null || true
           wait "$VIDEO_PID" 2>/dev/null || true
           sleep 2
@@ -108,11 +120,16 @@ jobs:
       - name: Check screenshot files
         if: always()
         run: |
-          mkdir -p visual-review/screenshots
+          mkdir -p visual-review/screenshots visual-review/dice-rolls
           count=$(find visual-review/screenshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')
           echo "Captured $count full-screen PNGs."
           if [ "$count" -ne 7 ]; then
             echo "Expected 7 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
+          fi
+          dice_count=$(find visual-review/dice-rolls -maxdepth 1 -type f -name 'D*.png' | wc -l | tr -d ' ')
+          echo "Captured $dice_count die-result PNGs."
+          if [ "$dice_count" -ne 6 ]; then
+            echo "Expected 6 dice result screenshots, received $dice_count." > visual-review/DICE-SCREENSHOTS-MISSING.txt
           fi
           find visual-review -maxdepth 2 -type f -print
 
@@ -121,6 +138,9 @@ jobs:
         run: |
           if find visual-review/screenshots -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) | grep -q .; then
             swift Scripts/make_contact_sheet.swift visual-review/screenshots visual-review/START-contact-sheet.png
+          fi
+          if find visual-review/dice-rolls -maxdepth 1 -type f -name '*.png' | grep -q .; then
+            swift Scripts/make_contact_sheet.swift visual-review/dice-rolls visual-review/START-dice-contact-sheet.png
           fi
 
       - name: Upload screenshots and contact sheet
@@ -133,6 +153,8 @@ jobs:
             visual-review/screenshots/
             visual-review/START-contact-sheet.png
             visual-review/START-dice-blender-preview.png
+            visual-review/dice-rolls/
+            visual-review/START-dice-contact-sheet.png
           if-no-files-found: warn
           retention-days: 14
 
@@ -141,8 +163,8 @@ jobs:
         id: upload-video
         uses: actions/upload-artifact@v4
         with:
-          name: START-dice-preview
-          path: visual-review/video/START-session.mp4
+          name: START-all-dice-reel
+          path: visual-review/video/START-all-dice.mp4
           if-no-files-found: warn
           retention-days: 14
 
@@ -151,7 +173,7 @@ jobs:
         run: |
           echo '## START — revisão visual' >> "$GITHUB_STEP_SUMMARY"
           echo '- [Baixar prints individuais e montagem geral](${{ steps.upload-screenshots.outputs.artifact-url }})' >> "$GITHUB_STEP_SUMMARY"
-          echo '- [Baixar vídeo da sessão no simulador](${{ steps.upload-video.outputs.artifact-url }})' >> "$GITHUB_STEP_SUMMARY"
+          echo '- [Baixar reel com os seis dados rolando](${{ steps.upload-video.outputs.artifact-url }})' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload build and UI test logs
         if: always()

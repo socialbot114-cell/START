@@ -31,6 +31,20 @@ final class STARTScreenshotTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Todo jogo tem uma grande história."].waitForExistence(timeout: 5))
     }
 
+    func testDiceGalleryCaptureResults() throws {
+        let captures: [(sides: Int, result: Int)] = [(4, 3), (6, 5), (8, 7), (10, 8), (12, 9), (20, 17)]
+        app.terminate()
+
+        for capture in captures {
+            app.launchArguments = ["-ui-testing", "-screenshot-mode", "-capture-die-\(capture.sides)"]
+            app.launch()
+            let result = app.descendants(matching: .any)["dice-result"]
+            XCTAssertTrue(result.waitForExistence(timeout: 5), "D\(capture.sides) capture should show its result")
+            XCTAssertEqual(Int(result.label), capture.result, "D\(capture.sides) capture should use its stable face")
+            app.terminate()
+        }
+    }
+
     func testMVPInteractions() throws {
         XCTAssertTrue(app.staticTexts["Todo jogo tem uma grande história."].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["mode-dice"].isHittable)

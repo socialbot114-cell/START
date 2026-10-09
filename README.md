@@ -4,7 +4,7 @@ MVP nativo para iOS, feito em SwiftUI e utilizável offline. A linguagem visual 
 
 ## Ferramentas
 
-- **Dados 3D:** D4, D6, D8, D10, D12 e D20 em resina clássica, modelados no Blender e empacotados como USDZ para SceneKit. O D6 usa pips; o D4 marca os vértices. Os demais imprimem valores nas faces e respeitam pares opostos. O resultado é sorteado uniformemente pelo gerador do sistema; a animação termina na face/vertex correspondente.
+- **Dados 3D:** D4, D6, D8, D10, D12 e D20 em resina polida, modelados no Blender e empacotados como USDZ para SceneKit. O acabamento usa microtextura sutil, chanfros proporcionais e marcações de baixo relevo visual; os pips do D6 ficam rebaixados com insertos escuros. O D4 marca os vértices; os demais exibem valores nas faces e respeitam pares opostos. O resultado é sorteado uniformemente pelo gerador do sistema; a animação termina na face/vértice correspondente.
 - **Carta mais alta:** usa um baralho padrão de 52 cartas sem repetição dentro da rodada, com desempate.
 - **Dedos na tela:** sorteia entre toques simultâneos mantidos por 2 segundos.
 - **Cartas de situação:** sorteia critérios offline e deixa o grupo selecionar quem começa.

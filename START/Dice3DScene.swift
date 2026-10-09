@@ -58,7 +58,7 @@ struct Die3DView: UIViewRepresentable {
                 dieNode.simdOrientation = target
             } else if currentToken != rollToken {
                 currentToken = rollToken
-                DiceGeometry.animate(dieNode, to: target)
+                DiceGeometry.animate(dieNode, to: target, sides: sides)
             }
         }
     }
@@ -74,6 +74,14 @@ private enum DiceGeometry {
     private static let warmKey = UIColor(red: 1.0, green: 0.73, blue: 0.43, alpha: 1)
     private static let faceInset: Float = 0.10
     private static let faceDepth: Float = 0.035
+
+    private struct RollMotionProfile {
+        let spinCycles: SIMD3<Float>
+        let lift: Float
+        let impact: Float
+        let drift: Float
+        let launchFraction: Float
+    }
 
     static func make(sides: Int) -> (node: SCNNode, faces: [PolyFace], vertices: [SIMD3<Float>]) {
         let rawVertices = vertices(for: sides)
@@ -210,6 +218,7 @@ private enum DiceGeometry {
         scene.rootNode.addChildNode(ambientNode)
 
         let shadow = SCNNode(geometry: SCNPlane(width: 2.10, height: 0.52))
+        shadow.name = "dice-contact-shadow"
         shadow.position = SCNVector3(0, -1.32, -0.38)
         shadow.eulerAngles.x = -0.10
         let shadowMaterial = SCNMaterial()
@@ -262,36 +271,65 @@ private enum DiceGeometry {
         return revealSideFaces * cameraFacing
     }
 
-    static func animate(_ node: SCNNode, to target: simd_quatf) {
+    static func animate(_ node: SCNNode, to target: simd_quatf, sides: Int) {
+        let profile = motionProfile(for: sides)
         let start = node.simdOrientation
         let axisA = simd_normalize(SIMD3<Float>(0.78, 0.54, 0.31))
         let axisB = simd_normalize(SIMD3<Float>(-0.28, 0.85, 0.44))
         let axisC = simd_normalize(SIMD3<Float>(0.38, -0.22, 0.90))
         let restingY = node.position.y
         let restingX = node.position.x
-        let duration: Float = 2.25
+        let duration: Float = 2.0
+        let shadow = node.parent?.childNode(withName: "dice-contact-shadow", recursively: false)
+        let shadowPosition = shadow?.position ?? SCNVector3(0, -1.32, -0.38)
+        let shadowScale = shadow?.scale ?? SCNVector3(1, 1, 1)
+        let shadowOpacity = shadow?.opacity ?? 0.42
         let tumble = SCNAction.customAction(duration: TimeInterval(duration)) { node, elapsed in
             let t = min(max(Float(elapsed) / duration, 0), 1)
             let eased = t < 0.76 ? 0.90 * (1 - pow(1 - t / 0.76, 2)) : 0.90 + 0.10 * ((t - 0.76) / 0.24)
             let base = simd_slerp(start, target, eased)
             let decay = 1 - eased
-            let spin = simd_quatf(angle: decay * .pi * 10, axis: axisC)
-                * simd_quatf(angle: decay * .pi * 8, axis: axisB)
-                * simd_quatf(angle: decay * .pi * 12, axis: axisA)
+            let spin = simd_quatf(angle: decay * .pi * profile.spinCycles.z, axis: axisC)
+                * simd_quatf(angle: decay * .pi * profile.spinCycles.y, axis: axisB)
+                * simd_quatf(angle: decay * .pi * profile.spinCycles.x, axis: axisA)
             node.simdOrientation = spin * base
 
-            let launch = t < 0.48 ? 0.46 * sin(.pi * t / 0.48) : 0
-            let contactTime = max(0, t - 0.48)
-            let impacts = t > 0.48 ? 0.16 * exp(-contactTime * 12) * abs(sin(contactTime * 36)) : 0
+            let launch = t < profile.launchFraction ? profile.lift * sin(.pi * t / profile.launchFraction) : 0
+            let contactTime = max(0, t - profile.launchFraction)
+            let impacts = t > profile.launchFraction ? profile.impact * exp(-contactTime * 12) * abs(sin(contactTime * 36)) : 0
+            let height = launch + impacts
             node.position.y = restingY + launch + impacts
-            node.position.x = restingX + 0.16 * sin(t * .pi * 1.3) * decay
-            let bounce = 1 + 0.06 * sin(t * .pi) + 0.025 * impacts
+            node.position.x = restingX + profile.drift * sin(t * .pi * 1.3) * decay
+            let bounce = 1 + 0.055 * sin(t * .pi) + 0.025 * impacts
             node.simdScale = SIMD3<Float>(repeating: bounce)
+
+            if let shadow {
+                let spread = 1 + height * 0.62
+                shadow.position = SCNVector3(node.position.x * 0.78, shadowPosition.y, shadowPosition.z)
+                shadow.scale = SCNVector3(shadowScale.x * spread, shadowScale.y * (1 + height * 0.12), shadowScale.z)
+                shadow.opacity = max(0.16, shadowOpacity - CGFloat(height * 0.52))
+            }
         }
         let settle = SCNAction.group([SCNAction.scale(to: 1, duration: 0.16), SCNAction.move(to: SCNVector3(restingX, restingY, node.position.z), duration: 0.16)])
         settle.timingMode = .easeOut
+        let resetShadow = SCNAction.run { _ in
+            shadow?.position = shadowPosition
+            shadow?.scale = shadowScale
+            shadow?.opacity = shadowOpacity
+        }
         node.removeAllActions()
-        node.runAction(.sequence([tumble, settle]))
+        node.runAction(.sequence([tumble, settle, resetShadow]))
+    }
+
+    private static func motionProfile(for sides: Int) -> RollMotionProfile {
+        switch sides {
+        case 4: return RollMotionProfile(spinCycles: SIMD3(6, 4, 8), lift: 0.34, impact: 0.12, drift: 0.10, launchFraction: 0.42)
+        case 6: return RollMotionProfile(spinCycles: SIMD3(8, 6, 10), lift: 0.40, impact: 0.15, drift: 0.12, launchFraction: 0.46)
+        case 8: return RollMotionProfile(spinCycles: SIMD3(8, 8, 12), lift: 0.42, impact: 0.14, drift: 0.13, launchFraction: 0.46)
+        case 10: return RollMotionProfile(spinCycles: SIMD3(10, 8, 12), lift: 0.43, impact: 0.13, drift: 0.14, launchFraction: 0.47)
+        case 12: return RollMotionProfile(spinCycles: SIMD3(10, 10, 14), lift: 0.44, impact: 0.14, drift: 0.15, launchFraction: 0.48)
+        default: return RollMotionProfile(spinCycles: SIMD3(12, 10, 16), lift: 0.46, impact: 0.15, drift: 0.16, launchFraction: 0.49)
+        }
     }
 
     private static func vertices(for sides: Int) -> [SIMD3<Float>] {
