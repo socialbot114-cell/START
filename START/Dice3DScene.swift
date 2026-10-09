@@ -173,12 +173,24 @@ private enum DiceGeometry {
 
         let fill = SCNLight()
         fill.type = .omni
-        fill.intensity = 190
+        fill.intensity = 360
         fill.color = UIColor(red: 0.50, green: 0.78, blue: 1.0, alpha: 1)
         let fillNode = SCNNode()
         fillNode.light = fill
-        fillNode.position = SCNVector3(4, 1, 2)
+        fillNode.position = SCNVector3(3, 1, 4)
         scene.rootNode.addChildNode(fillNode)
+
+        let softbox = SCNLight()
+        softbox.type = .area
+        softbox.intensity = 720
+        softbox.areaExtents = SCNVector3(3.2, 2.4, 0)
+        softbox.color = UIColor(red: 0.92, green: 0.95, blue: 1.0, alpha: 1)
+        softbox.castsShadow = false
+        let softboxNode = SCNNode()
+        softboxNode.light = softbox
+        softboxNode.position = SCNVector3(-1.3, 2.7, 4.5)
+        softboxNode.look(at: SCNVector3(0, 0, 0))
+        scene.rootNode.addChildNode(softboxNode)
 
         let rim = SCNLight()
         rim.type = .directional
@@ -191,7 +203,7 @@ private enum DiceGeometry {
 
         let ambient = SCNLight()
         ambient.type = .ambient
-        ambient.intensity = 110
+        ambient.intensity = 170
         ambient.color = UIColor(white: 0.48, alpha: 1)
         let ambientNode = SCNNode()
         ambientNode.light = ambient
