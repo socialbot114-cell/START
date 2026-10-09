@@ -61,10 +61,11 @@ Os modos atuais de início rápido (dados, dedos, carta alta e situações) perm
 
 ### 6. Qualidade e evolução
 
-- [ ] Executar no simulador iOS os testes de persistência após relançamento e retomada dos relógios.
-- [ ] Executar testes de roletas, empate, correções de resultado e isolamento entre grupos/jogos.
+- [x] Executar no simulador iOS testes de persistência após relançamento, placar, ranking e retomada de uma partida com timer.
+- [x] Executar testes dos fluxos principais de roletas, templates, criação local e conclusão de partida.
+- [ ] Ampliar cobertura automatizada para empate, correção de resultados e isolamento entre grupos/jogos.
 - [x] Configurar capturas das telas da biblioteca, templates, roleta, partida ao vivo, ranking e histórico.
-- [ ] Revisar os prints do simulador antes de atualizar `prints-finais/START-visual-review/`.
+- [x] Revisar e copiar os 14 prints, seis dados e reel aprovados para `prints-finais/START-visual-review/`.
 - [ ] Avaliar sincronização/exportação e suporte a outras plataformas numa etapa futura.
 
 ## Modelo de domínio proposto
@@ -80,5 +81,5 @@ Os modos atuais de início rápido (dados, dedos, carta alta e situações) perm
 - App iOS existente: modos de dados, dedos, cartas e situações; rolagem 3D e capturas visuais.
 - `PlayerStore` agora guarda grupos, jogadores, roletas, giros e partidas em um snapshot Codable versionado no Application Support; relógios usam datas persistidas para retomada correta.
 - Roletas, templates, partidas, placares, resultados, rankings e histórico implementados na árvore de trabalho.
-- Testes UI e capturas ampliados; build/teste e revisão visual no simulador ainda aguardam execução pelo GitHub Actions.
+- GitHub Actions passou no build e nos 6 testes UI; os 14 prints foram revisados e o reel contém os seis modelos na sequência correta.
 - A pasta `android/` contém trabalho local não rastreado; este ciclo preserva esses arquivos e foca na versão iOS.
