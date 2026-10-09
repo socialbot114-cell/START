@@ -120,8 +120,12 @@ private enum DiceGeometry {
             if isUITesting { fatalError("Missing Blender USDZ asset for D\(sides)") }
             return nil
         }
-        guard let assetScene = SCNScene(url: url, options: [.convertToYUp: false]) else {
+        let assetScene: SCNScene
+        do {
+            assetScene = try SCNScene(url: url, options: [.convertToYUp: false])
+        } catch {
             if isUITesting { fatalError("SceneKit could not load D\(sides).usdz") }
+            print("[START] USDZ load failed for D\(sides): \(error)")
             return nil
         }
 

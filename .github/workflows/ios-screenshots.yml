@@ -65,6 +65,7 @@ jobs:
       - name: Capture full-screen iPhone screenshots
         if: always()
         run: |
+          mkdir -p visual-review/screenshots visual-review/video
           capture_screen() {
             local name="$1"
             local route="$2"
@@ -87,6 +88,7 @@ jobs:
       - name: Record 3D dice preview
         if: always()
         run: |
+          mkdir -p visual-review/video
           xcrun simctl terminate "$UDID" com.start.companion 2>/dev/null || true
           xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/video/START-session.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
           VIDEO_PID=$!
@@ -100,6 +102,7 @@ jobs:
       - name: Check screenshot files
         if: always()
         run: |
+          mkdir -p visual-review/screenshots
           count=$(find visual-review/screenshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')
           echo "Captured $count full-screen PNGs."
           if [ "$count" -ne 5 ]; then
