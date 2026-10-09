@@ -45,7 +45,9 @@ jobs:
             build
 
       - name: Prepare visual-review folder
-        run: mkdir -p visual-review/screenshots visual-review/video
+        run: |
+          mkdir -p visual-review/screenshots visual-review/video
+          cp Blender/START-dice-studio.png visual-review/START-dice-blender-preview.png
 
       - name: Run app interaction tests
         run: |
@@ -121,6 +123,7 @@ jobs:
           path: |
             visual-review/screenshots/
             visual-review/START-contact-sheet.png
+            visual-review/START-dice-blender-preview.png
           if-no-files-found: warn
           retention-days: 14
 

@@ -1,6 +1,7 @@
 DerivedData/
 *.xcuserdata/
 *.xcuserstate
+*.blend1
 build/
 shots/
 visual-review/

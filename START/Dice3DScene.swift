@@ -83,27 +83,59 @@ private enum DiceGeometry {
         let faces = numberedFaces(hull, sides: sides)
         precondition(faces.count == sides, "D\(sides) mesh generated \(faces.count) faces")
         let root = SCNNode()
-        let body = makeBody(vertices: vertices, faces: faces, sides: sides)
-        root.addChildNode(body)
-        root.addChildNode(makeEdges(vertices: vertices, faces: faces, sides: sides))
-        if sides == 4 {
-            for face in faces {
-                for vertexIndex in face.indices {
-                    let point = face.center + (vertices[vertexIndex] - face.center) * 0.66
-                    root.addChildNode(makeLabel("\(vertexIndex + 1)", face: face, vertices: vertices, position: point, scaleMultiplier: 0.58))
-                }
-            }
-        } else if sides == 6 {
-            for (index, face) in faces.enumerated() {
-                root.addChildNode(makePips(value: index + 1, face: face, vertices: vertices))
-            }
+        if let blenderAsset = loadBlenderAsset(sides: sides) {
+            root.addChildNode(blenderAsset)
         } else {
-            for (index, face) in faces.enumerated() {
-                root.addChildNode(makeLabel("\(index + 1)", face: face, vertices: vertices))
+            let body = makeBody(vertices: vertices, faces: faces, sides: sides)
+            root.addChildNode(body)
+            root.addChildNode(makeEdges(vertices: vertices, faces: faces, sides: sides))
+            if sides == 4 {
+                for face in faces {
+                    for vertexIndex in face.indices {
+                        let point = face.center + (vertices[vertexIndex] - face.center) * 0.66
+                        root.addChildNode(makeLabel("\(vertexIndex + 1)", face: face, vertices: vertices, position: point, scaleMultiplier: 0.58))
+                    }
+                }
+            } else if sides == 6 {
+                for (index, face) in faces.enumerated() {
+                    root.addChildNode(makePips(value: index + 1, face: face, vertices: vertices))
+                }
+            } else {
+                for (index, face) in faces.enumerated() {
+                    root.addChildNode(makeLabel("\(index + 1)", face: face, vertices: vertices))
+                }
             }
         }
         root.simdScale = SIMD3<Float>(repeating: 1.0)
         return (root, faces, vertices)
+    }
+
+    private static func loadBlenderAsset(sides: Int) -> SCNNode? {
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
+        guard let url = Bundle.main.url(
+            forResource: "D\(sides)",
+            withExtension: "usdz",
+            subdirectory: "Art.scnassets/Dice"
+        ) else {
+            if isUITesting { fatalError("Missing Blender USDZ asset for D\(sides)") }
+            return nil
+        }
+        guard let assetScene = SCNScene(url: url, options: [.convertToYUp: false]) else {
+            if isUITesting { fatalError("SceneKit could not load D\(sides).usdz") }
+            return nil
+        }
+
+        let model = SCNNode()
+        model.name = "Blender_D\(sides)"
+        for child in assetScene.rootNode.childNodes {
+            model.addChildNode(child.clone())
+        }
+        guard !model.childNodes.isEmpty else {
+            if isUITesting { fatalError("D\(sides).usdz contains no SceneKit nodes") }
+            return nil
+        }
+        print("[START] Loaded Blender USDZ D\(sides)")
+        return model
     }
 
     static func scene(with die: SCNNode) -> SCNScene {
