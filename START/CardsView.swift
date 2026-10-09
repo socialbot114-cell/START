@@ -447,45 +447,37 @@ private struct CourtCardArt: View {
     let width: CGFloat
 
     private var ink: Color { card.isRed ? Color(red: 0.78, green: 0.10, blue: 0.14) : Color(red: 0.10, green: 0.12, blue: 0.14) }
-    private var emblem: String { card.rank == 11 ? "sparkles" : "crown.fill" }
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: width * 0.08)
-                .fill(style.ornament.opacity(0.10))
-                .overlay(RoundedRectangle(cornerRadius: width * 0.08).stroke(style.ornament.opacity(0.48), lineWidth: 0.8))
-            VStack(spacing: 1) {
-                portraitHalf
-                Rectangle()
-                    .fill(style.ornament.opacity(0.54))
-                    .frame(height: 0.7)
-                    .padding(.horizontal, width * 0.06)
-                portraitHalf.rotationEffect(.degrees(180))
-            }
-            .padding(width * 0.05)
+    private var emblem: String {
+        switch card.rank {
+        case 11: return "sparkles"
+        case 12: return "crown.fill"
+        default: return "star.fill"
         }
     }
 
-    private var portraitHalf: some View {
-        HStack(spacing: 1) {
-            Image(systemName: emblem)
-                .font(.system(size: width * 0.12, weight: .semibold))
-                .foregroundColor(style.ornament)
-                .frame(width: width * 0.16)
-            VStack(spacing: -3) {
-                Image(systemName: "person.fill")
-                    .font(.system(size: width * 0.20, weight: .medium))
-                    .foregroundColor(ink.opacity(0.88))
-                Text(card.suit)
-                    .font(.system(size: width * 0.12, weight: .bold, design: .serif))
-                    .foregroundColor(ink)
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                RoundedRectangle(cornerRadius: width * 0.08)
+                    .fill(style.ornament.opacity(0.09))
+                    .overlay(RoundedRectangle(cornerRadius: width * 0.08).stroke(style.ornament.opacity(0.54), lineWidth: 0.8))
+                Circle()
+                    .fill(style.ornament.opacity(0.10))
+                    .overlay(Circle().stroke(style.ornament.opacity(0.42), lineWidth: 0.7))
+                    .frame(width: min(width * 0.52, geometry.size.height * 0.86))
+                VStack(spacing: -3) {
+                    Image(systemName: emblem)
+                        .font(.system(size: width * 0.13, weight: .semibold))
+                        .foregroundColor(style.ornament)
+                    Image(systemName: "person.fill")
+                        .font(.system(size: width * 0.31, weight: .medium))
+                        .foregroundColor(ink.opacity(0.88))
+                    Text(card.suit)
+                        .font(.system(size: width * 0.16, weight: .bold, design: .serif))
+                        .foregroundColor(ink)
+                }
             }
-            .frame(maxWidth: .infinity)
-            Text(card.rankLabel)
-                .font(.system(size: width * 0.20, weight: .black, design: .serif))
-                .foregroundColor(ink)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
