@@ -12,7 +12,6 @@ struct DiceView: View {
     private let dice = Dice.allCases
     private var launchArguments: [String] { ProcessInfo.processInfo.arguments }
     private var screenshotMode: Bool { launchArguments.contains("-screenshot-mode") }
-    private let columns = [GridItem(.flexible(), spacing: 9), GridItem(.flexible(), spacing: 9), GridItem(.flexible(), spacing: 9)]
 
     var body: some View {
         ZStack {
@@ -36,33 +35,36 @@ struct DiceView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
 
-                    LazyVGrid(columns: columns, spacing: 8) {
-                        ForEach(dice) { die in
-                            Button {
-                                withAnimation(.spring(response: 0.28, dampingFraction: 0.75)) {
-                                    sides = die.rawValue
-                                    result = min(result, sides)
-                                    hasRolled = false
+                    ScrollView(.horizontal) {
+                        HStack(spacing: 7) {
+                            ForEach(dice) { die in
+                                Button {
+                                    withAnimation(.spring(response: 0.28, dampingFraction: 0.75)) {
+                                        sides = die.rawValue
+                                        result = min(result, sides)
+                                        hasRolled = false
+                                    }
+                                } label: {
+                                    HStack(spacing: 5) {
+                                        Circle()
+                                            .fill(resinColor(for: die.rawValue))
+                                            .frame(width: 6, height: 6)
+                                        Text(die.label)
+                                            .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                    }
+                                    .foregroundColor(sides == die.rawValue ? Theme.accentText : .white.opacity(0.86))
+                                    .frame(width: 52)
+                                    .padding(.vertical, 8)
+                                    .background(sides == die.rawValue ? Theme.accent : .black.opacity(0.52), in: RoundedRectangle(cornerRadius: 11))
+                                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(sides == die.rawValue ? .white.opacity(0.28) : .white.opacity(0.13), lineWidth: 1))
                                 }
-                            } label: {
-                                HStack(spacing: 5) {
-                                    Circle()
-                                        .fill(resinColor(for: die.rawValue))
-                                        .frame(width: 6, height: 6)
-                                    Text(die.label)
-                                        .font(.system(size: 12, weight: .heavy, design: .rounded))
-                                }
-                                .foregroundColor(sides == die.rawValue ? Theme.accentText : .white.opacity(0.86))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(sides == die.rawValue ? Theme.accent : .black.opacity(0.52), in: RoundedRectangle(cornerRadius: 11))
-                                .overlay(RoundedRectangle(cornerRadius: 11).stroke(sides == die.rawValue ? .white.opacity(0.28) : .white.opacity(0.13), lineWidth: 1))
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("die-d\(die.rawValue)")
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityIdentifier("die-d\(die.rawValue)")
                         }
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.horizontal, 20)
+                    .scrollIndicators(.hidden)
                     .accessibilityIdentifier("dice-picker")
 
                     ZStack(alignment: .bottom) {
@@ -155,8 +157,8 @@ struct DiceView: View {
         switch sides {
         case 4: return Color(red: 0.84, green: 0.16, blue: 0.18)
         case 6: return Color(red: 0.88, green: 0.82, blue: 0.68)
-        case 8: return Color(red: 0.10, green: 0.43, blue: 0.29)
-        case 10: return Color(red: 0.65, green: 0.15, blue: 0.24)
+        case 8: return Color(red: 0.10, green: 0.27, blue: 0.62)
+        case 10: return Color(red: 0.10, green: 0.43, blue: 0.29)
         case 12: return Color(red: 0.48, green: 0.22, blue: 0.70)
         default: return Color(red: 0.10, green: 0.27, blue: 0.62)
         }
