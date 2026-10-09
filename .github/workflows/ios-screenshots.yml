@@ -108,10 +108,10 @@ jobs:
         run: |
           mkdir -p visual-review/video
           xcrun simctl terminate "$UDID" com.start.companion 2>/dev/null || true
+          xcrun simctl launch "$UDID" com.start.companion -capture-dice-reel
+          sleep 1.5
           xcrun simctl io "$UDID" recordVideo --codec=hevc visual-review/video/START-all-dice.mp4 > "$RUNNER_TEMP/record-video.log" 2>&1 &
           VIDEO_PID=$!
-          sleep 1
-          xcrun simctl launch "$UDID" com.start.companion -capture-dice-reel
           sleep 22
           kill -INT "$VIDEO_PID" 2>/dev/null || true
           wait "$VIDEO_PID" 2>/dev/null || true

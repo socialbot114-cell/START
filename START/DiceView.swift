@@ -167,7 +167,14 @@ struct DiceView: View {
 
     private func playCaptureReel() {
         guard captureReelTask == nil else { return }
+        if let firstFrame = captureReel.first {
+            sides = firstFrame.sides
+            result = firstFrame.result
+            hasRolled = false
+            rolling = false
+        }
         captureReelTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_400_000_000)
             for frame in captureReel {
                 guard !Task.isCancelled else { break }
                 withAnimation(.easeInOut(duration: 0.22)) {
