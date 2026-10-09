@@ -98,7 +98,7 @@ struct DiceView: View {
                         .padding(.horizontal, 15)
                         .padding(.bottom, 12)
                     }
-                    .frame(height: 205)
+                    .frame(height: 178)
                     .padding(.horizontal, 18)
 
                     Button {
@@ -116,10 +116,6 @@ struct DiceView: View {
                     .padding(.horizontal, 20)
                     .accessibilityIdentifier("roll-dice-button")
 
-                    Text("Cada face tem a mesma chance de sair.")
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .foregroundColor(.white.opacity(0.54))
-                        .padding(.bottom, 8)
                 }
                 .padding(.top, 3)
                 .padding(.bottom, 10)

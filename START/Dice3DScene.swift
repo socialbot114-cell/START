@@ -139,21 +139,8 @@ private enum DiceGeometry {
             return nil
         }
 
-        var minimum = SCNVector3Zero
-        var maximum = SCNVector3Zero
-        guard model.getBoundingBoxMin(&minimum, max: &maximum) else {
-            if isUITesting { fatalError("Could not measure Blender D\(sides).usdz") }
-            return nil
-        }
-        let center = SCNVector3((minimum.x + maximum.x) / 2, (minimum.y + maximum.y) / 2, (minimum.z + maximum.z) / 2)
-        let maxExtent = max(max(maximum.x - minimum.x, maximum.y - minimum.y), maximum.z - minimum.z)
-        guard maxExtent > 0.001 else {
-            if isUITesting { fatalError("Blender D\(sides).usdz has invalid bounds") }
-            return nil
-        }
-        model.pivot = SCNMatrix4MakeTranslation(center.x, center.y, center.z)
-        let fitScale = 2.36 / maxExtent
-        model.simdScale = SIMD3<Float>(repeating: fitScale)
+        // USDZ preserves Blender's modeled size, so apply a small shared presentation scale.
+        model.simdScale = SIMD3<Float>(repeating: 1.28)
         print("[START] Loaded Blender USDZ D\(sides)")
         return model
     }
