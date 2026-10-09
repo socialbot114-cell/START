@@ -61,7 +61,7 @@ struct DiceView: View {
                                         .background(sides == die.rawValue ? Theme.accent : .black.opacity(0.52), in: RoundedRectangle(cornerRadius: 11))
                                         .overlay(RoundedRectangle(cornerRadius: 11).stroke(sides == die.rawValue ? .white.opacity(0.28) : .white.opacity(0.13), lineWidth: 1))
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(StartButtonMotionStyle())
                                     .accessibilityIdentifier("die-d\(die.rawValue)")
                                 }
                             }

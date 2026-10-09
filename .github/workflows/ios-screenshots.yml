@@ -83,7 +83,7 @@ jobs:
           capture_screen 01-home home 1
           capture_screen 02-dice dice 3
           capture_screen 03-finger finger 1
-          capture_screen 04-cards cards 1
+          capture_screen 04-cards cards 2
           capture_screen 05-situations situations 1
 
       - name: Record 3D dice preview

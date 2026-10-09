@@ -55,6 +55,18 @@ extension View {
     }
 }
 
+struct StartButtonMotionStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(!reduceMotion && configuration.isPressed ? 0.965 : 1)
+            .offset(y: !reduceMotion && configuration.isPressed ? 1.5 : 0)
+            .brightness(configuration.isPressed ? -0.035 : 0)
+            .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.62), value: configuration.isPressed)
+    }
+}
+
 struct TableBackground: View {
     var body: some View {
         GeometryReader { proxy in

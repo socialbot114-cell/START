@@ -25,94 +25,106 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
-            ZStack {
-                TableBackground()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 9) {
-                        homeHeader
-                        hero
+        GeometryReader { geometry in
+            NavigationStack(path: $path) {
+                ZStack {
+                    TableBackground()
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            homeHeader
+                            Spacer(minLength: 18)
+                            hero
+                            Spacer(minLength: 20)
 
-                        Button {
-                            path.append(.chooseMethod)
-                        } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: "sparkles")
-                                Text("QUEM COMEÇA?")
-                                Spacer()
-                                Image(systemName: "arrow.right")
+                            Button {
+                                path.append(.chooseMethod)
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: "sparkles")
+                                    Text("QUEM COMEÇA?")
+                                    Spacer()
+                                    Image(systemName: "arrow.right")
+                                }
+                                .startPrimaryButton()
                             }
-                            .startPrimaryButton()
-                        }
-                        .accessibilityIdentifier("start-title")
+                            .accessibilityIdentifier("start-title")
+                            .padding(.bottom, 12)
 
-                        HStack {
-                            Text("ESCOLHA COMO COMEÇAR")
-                                .font(.system(.caption, design: .rounded, weight: .heavy))
-                                .tracking(1.2)
-                                .foregroundColor(.white.opacity(0.83))
-                            Spacer()
-                            Text("04 MODOS")
-                                .font(.system(.caption2, design: .rounded, weight: .bold))
-                                .tracking(0.8)
-                                .foregroundColor(Theme.accent)
-                        }
-                        .padding(.top, 2)
+                            playerSummary
+                                .padding(.bottom, 20)
 
-                        LazyVGrid(columns: columns, spacing: 11) {
-                            modeLink(.dice, symbol: "die.face.5.fill", title: "Dados", subtitle: "D4 até D20", number: "01", id: "mode-dice")
-                            modeLink(.finger, symbol: "hand.tap.fill", title: "Dedos na tela", subtitle: "Escolha no toque", number: "02", id: "mode-finger")
-                            modeLink(.cards, symbol: "suit.spade.fill", title: "Carta mais alta", subtitle: "Quem tira a maior", number: "03", id: "mode-cards")
-                            modeLink(.situations, symbol: "rectangle.stack.fill", title: "Cartas de situação", subtitle: "Quem combina?", number: "04", id: "mode-situations")
-                        }
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("ESCOLHA COMO COMEÇAR")
+                                    .font(.system(.caption, design: .rounded, weight: .heavy))
+                                    .tracking(1.2)
+                                    .foregroundColor(.white.opacity(0.83))
+                                Spacer()
+                                Text("04 MODOS")
+                                    .font(.system(.caption2, design: .rounded, weight: .bold))
+                                    .tracking(0.8)
+                                    .foregroundColor(Theme.accent)
+                            }
+                            .padding(.bottom, 11)
 
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                modeLink(.dice, symbol: "die.face.5.fill", title: "Dados", subtitle: "D4 até D20", number: "01", id: "mode-dice")
+                                modeLink(.finger, symbol: "hand.tap.fill", title: "Dedos na tela", subtitle: "Escolha no toque", number: "02", id: "mode-finger")
+                                modeLink(.cards, symbol: "suit.spade.fill", title: "Carta mais alta", subtitle: "Quem tira a maior", number: "03", id: "mode-cards")
+                                modeLink(.situations, symbol: "rectangle.stack.fill", title: "Cartas de situação", subtitle: "Quem combina?", number: "04", id: "mode-situations")
+                            }
+
+                            Spacer(minLength: 18)
+                            homeFooter
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.top, 4)
+                        .padding(.bottom, 12)
+                        .frame(maxWidth: 560)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: geometry.size.height, alignment: .top)
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 4)
-                    .padding(.bottom, 10)
-                    .frame(maxWidth: 560)
-                    .frame(maxWidth: .infinity)
+                    .scrollIndicators(.hidden)
                 }
-                .scrollIndicators(.hidden)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Theme.background)
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: AppRoute.self) { route in
-                switch route {
-                case .chooseMethod:
-                    MethodChooserView { path.append($0) }
-                case .dice:
-                    DiceView()
-                case .finger:
-                    FingerPickerView()
-                case .cards:
-                    CardsView()
-                case .situations:
-                    SituationDeckView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Theme.background)
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: AppRoute.self) { route in
+                    switch route {
+                    case .chooseMethod:
+                        MethodChooserView { path.append($0) }
+                    case .dice:
+                        DiceView()
+                    case .finger:
+                        FingerPickerView()
+                    case .cards:
+                        CardsView()
+                    case .situations:
+                        SituationDeckView()
+                    }
                 }
             }
-        }
-        .tint(Theme.accent)
-        .sheet(isPresented: $showPlayers) {
-            PlayerManagerView()
-                .environmentObject(players)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .preferredColorScheme(.dark)
+            .tint(Theme.accent)
+            .buttonStyle(StartButtonMotionStyle())
+            .sheet(isPresented: $showPlayers) {
+                PlayerManagerView()
+                    .environmentObject(players)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                    .preferredColorScheme(.dark)
+            }
         }
     }
 
     private var homeHeader: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 0) {
-                StartLogo(compact: true)
-                    .frame(height: 39, alignment: .leading)
+                StartLogo(compact: false)
+                    .frame(height: 52, alignment: .leading)
                 Text("YOUR BOARD GAME COMPANION")
-                    .font(.system(size: 7, weight: .bold, design: .rounded))
-                    .tracking(1.8)
+                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .tracking(2.1)
                     .foregroundColor(Theme.mutedText)
-                    .padding(.leading, 3)
+                    .padding(.leading, 4)
             }
             Spacer()
             Button { showPlayers = true } label: {
@@ -128,23 +140,44 @@ struct ContentView: View {
     }
 
     private var hero: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 5) {
             Text("Todo jogo tem uma grande história.")
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .font(.system(size: 19, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
                 .fixedSize(horizontal: false, vertical: true)
             Text("E ela sempre começa por alguém.")
-                .font(.system(size: 16, weight: .heavy, design: .rounded))
+                .font(.system(size: 18, weight: .heavy, design: .rounded))
                 .foregroundColor(Theme.accent)
                 .fixedSize(horizontal: false, vertical: true)
             Text("Decida quem começa. Rápido, divertido e sem internet.")
-                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundColor(.white.opacity(0.75))
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 1)
         }
-        .padding(.vertical, 0)
+        .padding(.horizontal, 2)
         .accessibilityIdentifier("home-header")
+    }
+
+    private var homeFooter: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(Theme.accent)
+            Text("PRONTO PARA JOGAR · SEM INTERNET")
+                .font(.system(size: 9, weight: .heavy, design: .rounded))
+                .tracking(1.15)
+                .foregroundColor(.white.opacity(0.58))
+            Spacer(minLength: 0)
+            Image(systemName: "sparkles")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(Theme.accent.opacity(0.75))
+        }
+        .padding(.horizontal, 3)
+        .padding(.vertical, 11)
+        .overlay(alignment: .top) {
+            Rectangle().fill(.white.opacity(0.10)).frame(height: 1)
+        }
     }
 
     private var playerSummary: some View {
@@ -180,7 +213,7 @@ struct ContentView: View {
             .background(.black.opacity(0.44), in: RoundedRectangle(cornerRadius: 15))
             .overlay(RoundedRectangle(cornerRadius: 15).stroke(.white.opacity(0.11), lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StartButtonMotionStyle())
         .accessibilityIdentifier("players-summary")
     }
 
@@ -188,7 +221,7 @@ struct ContentView: View {
         NavigationLink(value: route) {
             ModeTile(symbol: symbol, title: title, subtitle: subtitle, number: number)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(StartButtonMotionStyle())
         .accessibilityIdentifier(id)
     }
 }
@@ -227,7 +260,7 @@ struct ModeTile: View {
             }
         }
         .padding(9)
-        .frame(maxWidth: .infinity, minHeight: 73, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 96, alignment: .leading)
         .background(
             LinearGradient(colors: [Color.black.opacity(0.76), Theme.cardRaised.opacity(0.88)], startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 16)
@@ -275,7 +308,7 @@ struct MethodChooserView: View {
                             }
                             .startCard(padding: 12)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StartButtonMotionStyle())
                     }
                 }
                 .padding(.horizontal, 18)
@@ -343,6 +376,7 @@ struct PlayerManagerView: View {
                         .foregroundColor(Theme.accent)
                 }
             }
+            .buttonStyle(StartButtonMotionStyle())
             .toolbarBackground(.hidden, for: .navigationBar)
         }
         .preferredColorScheme(.dark)

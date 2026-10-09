@@ -17,6 +17,20 @@ final class STARTScreenshotTests: XCTestCase {
         }
     }
 
+    func testFirstLaunchOnboarding() throws {
+        app.terminate()
+        app.launchArguments = ["-ui-testing", "-reset-onboarding"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["A primeira vez é no acaso."].waitForExistence(timeout: 10))
+        app.buttons["onboarding-next"].tap()
+        XCTAssertTrue(app.staticTexts["Escolham juntos."].waitForExistence(timeout: 3))
+        app.buttons["onboarding-next"].tap()
+        XCTAssertTrue(app.buttons["onboarding-start"].waitForExistence(timeout: 3))
+        app.buttons["onboarding-start"].tap()
+        XCTAssertTrue(app.staticTexts["Todo jogo tem uma grande história."].waitForExistence(timeout: 5))
+    }
+
     func testMVPInteractions() throws {
         XCTAssertTrue(app.staticTexts["Todo jogo tem uma grande história."].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["mode-dice"].isHittable)
@@ -60,6 +74,7 @@ final class STARTScreenshotTests: XCTestCase {
         app.buttons["deal-cards-button"].tap()
         sleep(1)
         XCTAssertTrue(app.descendants(matching: .any)["cards-result"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["dealt-card-3"].waitForExistence(timeout: 3))
         goBackIfNeeded()
 
         // Situations

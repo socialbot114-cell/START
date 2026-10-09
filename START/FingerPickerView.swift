@@ -8,104 +8,114 @@ struct FingerPickerView: View {
     @State private var status = "Toquem e segurem na tela"
 
     var body: some View {
-        ZStack {
-            TableBackground()
-            ScrollView {
-                VStack(spacing: 13) {
-                    AppScreenHeader(title: "Dedos") { dismiss() }
+        GeometryReader { geometry in
+            let arenaHeight = max(310, min(440, geometry.size.height * 0.52))
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("TODO MUNDO AO MESMO TEMPO")
-                            .font(.system(size: 9, weight: .heavy, design: .rounded))
-                            .tracking(1.6)
-                            .foregroundColor(Theme.accent)
-                        Text("Dedos na mesa")
-                            .font(.system(size: 24, weight: .heavy, design: .rounded))
-                            .foregroundColor(.white)
-                        Text("Cada pessoa segura um ponto. O START escolhe um dedo.")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundColor(Theme.mutedText)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
+            ZStack {
+                TableBackground()
+                ScrollView {
+                    VStack(spacing: 0) {
+                        AppScreenHeader(title: "Dedos") { dismiss() }
+                        Spacer(minLength: 16)
 
-                    ZStack(alignment: .top) {
-                        RoundedRectangle(cornerRadius: 25)
-                            .fill(LinearGradient(colors: [.black.opacity(0.75), Theme.cardRaised.opacity(0.90)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        RoundedRectangle(cornerRadius: 25)
-                            .stroke(Theme.accent.opacity(0.32), lineWidth: 1)
-
-                        MultiTouchView(winnerIndex: $winnerIndex, touchCount: $touchCount, status: $status)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: 25))
-                            .accessibilityIdentifier("finger-area")
-
-                        VStack(spacing: 4) {
-                            Text(status.uppercased())
-                                .font(.system(size: 10, weight: .heavy, design: .rounded))
-                                .tracking(1.1)
-                                .foregroundColor(winnerIndex == nil ? .white.opacity(0.88) : Theme.accent)
-                                .accessibilityIdentifier("finger-result")
-                            Text(touchCount >= 2 ? "\(touchCount) DEDOS NA MESA" : "2 A 8 JOGADORES")
-                                .font(.system(size: 9, weight: .bold, design: .rounded))
-                                .tracking(1)
-                                .foregroundColor(.white.opacity(0.56))
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("TODO MUNDO AO MESMO TEMPO")
+                                .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                .tracking(1.6)
+                                .foregroundColor(Theme.accent)
+                            Text("Dedos na mesa")
+                                .font(.system(size: 24, weight: .heavy, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("Cada pessoa segura um ponto. O START escolhe um dedo.")
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundColor(Theme.mutedText)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
-                        .padding(.top, 15)
-                        .allowsHitTesting(false)
-                    }
-                    .frame(height: 338)
-                    .padding(.horizontal, 18)
-                    .overlay(alignment: .bottom) {
-                        if winnerIndex != nil {
-                            Text("DEDO \((winnerIndex ?? 0) + 1) COMEÇA! ✨")
-                                .font(.system(size: 13, weight: .black, design: .rounded))
-                                .tracking(0.8)
-                                .foregroundColor(Theme.accentText)
-                                .padding(.horizontal, 19)
-                                .padding(.vertical, 11)
-                                .background(Theme.accent, in: Capsule())
-                                .offset(y: -17)
-                                .accessibilityIdentifier("finger-winner")
-                        }
-                    }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20)
+                        Spacer(minLength: 20)
 
-                    HStack(spacing: 7) {
-                        Image(systemName: "hand.point.up.left.fill").foregroundColor(Theme.accent)
-                        Text("Segurem por 2 segundos. Quem soltar antes sai do sorteio.")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundColor(Theme.mutedText)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 21)
+                        ZStack(alignment: .top) {
+                            RoundedRectangle(cornerRadius: 25)
+                                .fill(LinearGradient(colors: [.black.opacity(0.75), Theme.cardRaised.opacity(0.90)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            RoundedRectangle(cornerRadius: 25)
+                                .stroke(Theme.accent.opacity(0.32), lineWidth: 1)
 
-                    Button {
-                        winnerIndex = nil
-                        touchCount = 0
-                        status = "Toquem e segurem na tela"
-                    } label: {
-                        HStack {
-                            Image(systemName: "arrow.counterclockwise")
-                            Text("NOVA ESCOLHA")
-                            Spacer()
-                            Image(systemName: "arrow.right")
+                            MultiTouchView(winnerIndex: $winnerIndex, touchCount: $touchCount, status: $status)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .clipShape(RoundedRectangle(cornerRadius: 25))
+                                .accessibilityIdentifier("finger-area")
+
+                            VStack(spacing: 4) {
+                                Text(status.uppercased())
+                                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                                    .tracking(1.1)
+                                    .foregroundColor(winnerIndex == nil ? .white.opacity(0.88) : Theme.accent)
+                                    .accessibilityIdentifier("finger-result")
+                                Text(touchCount >= 2 ? "\(touchCount) DEDOS NA MESA" : "2 A 8 JOGADORES")
+                                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                                    .tracking(1)
+                                    .foregroundColor(.white.opacity(0.56))
+                            }
+                            .padding(.top, 15)
+                            .allowsHitTesting(false)
                         }
-                        .startPrimaryButton()
+                        .frame(height: arenaHeight)
+                        .padding(.horizontal, 18)
+                        .overlay(alignment: .bottom) {
+                            if winnerIndex != nil {
+                                Text("DEDO \((winnerIndex ?? 0) + 1) COMEÇA! ✨")
+                                    .font(.system(size: 13, weight: .black, design: .rounded))
+                                    .tracking(0.8)
+                                    .foregroundColor(Theme.accentText)
+                                    .padding(.horizontal, 19)
+                                    .padding(.vertical, 11)
+                                    .background(Theme.accent, in: Capsule())
+                                    .offset(y: -17)
+                                    .accessibilityIdentifier("finger-winner")
+                            }
+                        }
+                        Spacer(minLength: 14)
+
+                        HStack(spacing: 7) {
+                            Image(systemName: "hand.point.up.left.fill").foregroundColor(Theme.accent)
+                            Text("Segurem por 2 segundos. Quem soltar antes sai do sorteio.")
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .foregroundColor(Theme.mutedText)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 21)
+                        Spacer(minLength: 12)
+
+                        Button {
+                            winnerIndex = nil
+                            touchCount = 0
+                            status = "Toquem e segurem na tela"
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.counterclockwise")
+                                Text("NOVA ESCOLHA")
+                                Spacer()
+                                Image(systemName: "arrow.right")
+                            }
+                            .startPrimaryButton()
+                        }
+                        .padding(.horizontal, 20)
+                        .accessibilityIdentifier("finger-reset")
+                        Spacer(minLength: 14)
                     }
-                    .padding(.horizontal, 20)
-                    .accessibilityIdentifier("finger-reset")
+                    .padding(.top, 3)
+                    .padding(.bottom, 18)
+                    .frame(maxWidth: 560)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: geometry.size.height, alignment: .top)
                 }
-                .padding(.top, 7)
-                .padding(.bottom, 20)
-                .frame(maxWidth: 560)
-                .frame(maxWidth: .infinity)
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.background)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.background)
         .toolbar(.hidden, for: .navigationBar)
     }
 }
