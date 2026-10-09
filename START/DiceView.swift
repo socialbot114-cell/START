@@ -94,6 +94,7 @@ struct DiceView: View {
                             RoundedRectangle(cornerRadius: 23)
                                 .stroke(Theme.accent.opacity(0.24), lineWidth: 1)
                             Die3DView(sides: sides, result: result, rollToken: rollToken)
+                                .id(sides)
                                 .padding(.horizontal, 8)
                                 .padding(.top, 6)
                                 .padding(.bottom, 32)
