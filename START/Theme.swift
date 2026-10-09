@@ -40,6 +40,7 @@ extension View {
         self
             .font(.system(.headline, design: .rounded, weight: .bold))
             .foregroundColor(Theme.accentText)
+            .padding(.horizontal, 20)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
             .background(
