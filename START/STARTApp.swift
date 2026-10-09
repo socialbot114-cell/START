@@ -6,11 +6,16 @@ struct STARTApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(players)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.background.ignoresSafeArea())
-                .preferredColorScheme(.dark)
+            GeometryReader { geometry in
+                ZStack {
+                    Theme.background.ignoresSafeArea()
+                    ContentView()
+                        .environmentObject(players)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+            }
+            .preferredColorScheme(.dark)
         }
     }
 }
