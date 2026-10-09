@@ -18,6 +18,7 @@ final class STARTScreenshotTests: XCTestCase {
     }
 
     func testMVPInteractions() throws {
+        print("[START layout] app frame: \(app.frame); window frame: \(app.windows.firstMatch.frame)")
         XCTAssertTrue(app.staticTexts["Todo jogo tem uma grande história."].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["mode-dice"].isHittable)
         XCTAssertTrue(app.buttons["mode-finger"].isHittable)
