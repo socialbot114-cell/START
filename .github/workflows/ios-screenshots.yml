@@ -59,6 +59,7 @@ jobs:
             -configuration Debug \
             -destination "platform=iOS Simulator,id=$UDID" \
             -derivedDataPath DerivedData \
+            -only-testing:STARTUITests/STARTScreenshotTests/testFirstLaunchOnboarding \
             -only-testing:STARTUITests/STARTScreenshotTests/testMVPInteractions \
             CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY='' \
             test | tee xcodebuild-test.log
@@ -72,7 +73,9 @@ jobs:
             local route="$2"
             local settle="$3"
             xcrun simctl terminate "$UDID" com.start.companion 2>/dev/null || true
-            if [ "$route" = home ]; then
+            if [ "$route" = onboarding ]; then
+              xcrun simctl launch "$UDID" com.start.companion -capture-onboarding
+            elif [ "$route" = home ]; then
               xcrun simctl launch "$UDID" com.start.companion -screenshot-mode
             else
               xcrun simctl launch "$UDID" com.start.companion -screenshot-mode "-capture-$route"
@@ -80,6 +83,7 @@ jobs:
             sleep "$settle"
             xcrun simctl io "$UDID" screenshot "visual-review/screenshots/$name.png"
           }
+          capture_screen 00-onboarding onboarding 1
           capture_screen 01-home home 1
           capture_screen 02-dice dice 3
           capture_screen 03-finger finger 1
@@ -106,8 +110,8 @@ jobs:
           mkdir -p visual-review/screenshots
           count=$(find visual-review/screenshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')
           echo "Captured $count full-screen PNGs."
-          if [ "$count" -ne 5 ]; then
-            echo "Expected 5 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
+          if [ "$count" -ne 6 ]; then
+            echo "Expected 6 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
           fi
           find visual-review -maxdepth 2 -type f -print
 

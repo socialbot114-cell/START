@@ -294,15 +294,6 @@ private struct PlayingCardFaceView: View {
                     .stroke(isWinner ? Theme.accent : .black.opacity(0.13), lineWidth: isWinner ? 2.4 : 0.8)
                     .padding(isWinner ? 1 : 0)
             }
-            .overlay(alignment: .bottomTrailing) {
-                if isWinner {
-                    Image(systemName: "crown.fill")
-                        .font(.system(size: width * 0.17, weight: .bold))
-                        .foregroundColor(Theme.accent)
-                        .padding(width * 0.09)
-                        .rotationEffect(.degrees(18))
-                }
-            }
             .frame(width: width, height: height)
             .accessibilityHidden(true)
     }

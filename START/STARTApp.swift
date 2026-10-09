@@ -31,8 +31,9 @@ struct AppLaunchView: View {
     @State private var phase: AppLaunchPhase = .loading
 
     private var launchArguments: [String] { ProcessInfo.processInfo.arguments }
+    private var isOnboardingCapture: Bool { launchArguments.contains("-capture-onboarding") }
     private var isVisualCapture: Bool {
-        launchArguments.contains("-screenshot-mode") || launchArguments.contains(where: { $0.hasPrefix("-capture-") })
+        launchArguments.contains("-screenshot-mode") || (launchArguments.contains(where: { $0.hasPrefix("-capture-") }) && !isOnboardingCapture)
     }
 
     var body: some View {
@@ -55,8 +56,12 @@ struct AppLaunchView: View {
         .background(Theme.background)
         .animation(.easeInOut(duration: 0.3), value: phase)
         .task {
-            if launchArguments.contains("-reset-onboarding") {
+            if launchArguments.contains("-reset-onboarding") || isOnboardingCapture {
                 hasCompletedOnboarding = false
+            }
+            if isOnboardingCapture {
+                phase = .onboarding
+                return
             }
             if isVisualCapture {
                 phase = .home
