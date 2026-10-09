@@ -88,7 +88,8 @@ jobs:
           capture_screen 02-dice dice 3
           capture_screen 03-finger finger 1
           capture_screen 04-cards cards 2
-          capture_screen 05-situations situations 1
+          capture_screen 05-full-deck full-deck 1
+          capture_screen 06-situations situations 1
 
       - name: Record 3D dice preview
         if: always() && steps.build.outcome == 'success'
@@ -110,8 +111,8 @@ jobs:
           mkdir -p visual-review/screenshots
           count=$(find visual-review/screenshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')
           echo "Captured $count full-screen PNGs."
-          if [ "$count" -ne 6 ]; then
-            echo "Expected 6 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
+          if [ "$count" -ne 7 ]; then
+            echo "Expected 7 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
           fi
           find visual-review -maxdepth 2 -type f -print
 

@@ -49,6 +49,7 @@ struct CardsView: View {
     @State private var tiedNames: [String] = []
     @State private var dealCount = 0
     @State private var fanIsOpen = false
+    @State private var showDeckBrowser = false
     @AppStorage("start.playingCardStyle") private var selectedStyleRawValue = "classic"
     private let screenshotMode = ProcessInfo.processInfo.arguments.contains("-screenshot-mode")
 
@@ -81,6 +82,7 @@ struct CardsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 20)
                         deckStylePicker
+                        deckInventoryButton
                         Spacer(minLength: 18)
 
                         if draws.isEmpty {
@@ -140,10 +142,20 @@ struct CardsView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
+            if ProcessInfo.processInfo.arguments.contains("-capture-full-deck") {
+                selectedStyleRawValue = PlayingCardStyle.classic.rawValue
+                showDeckBrowser = true
+            }
             if ProcessInfo.processInfo.arguments.contains("-capture-cards") {
                 selectedStyleRawValue = PlayingCardStyle.classic.rawValue
                 if draws.isEmpty { deal() }
             }
+        }
+        .sheet(isPresented: $showDeckBrowser) {
+            FullDeckBrowser(style: selectedStyle)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .preferredColorScheme(.dark)
         }
     }
 
@@ -177,6 +189,55 @@ struct CardsView: View {
         }
         .padding(.horizontal, 18)
         .padding(.top, 13)
+    }
+
+    private var deckInventoryButton: some View {
+        Button {
+            GameFeedback.impact(.soft)
+            showDeckBrowser = true
+        } label: {
+            HStack(spacing: 11) {
+                ZStack {
+                    PlayingCardBackView(style: selectedStyle, width: 34)
+                        .rotationEffect(.degrees(-9))
+                        .offset(x: -5, y: 2)
+                    PlayingCardBackView(style: selectedStyle, width: 34)
+                        .rotationEffect(.degrees(7))
+                        .offset(x: 5, y: -1)
+                }
+                .frame(width: 48, height: 55)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("BARALHO COMPLETO")
+                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                        .tracking(1.0)
+                        .foregroundColor(.white.opacity(0.86))
+                    Text("\(deck.count) cartas disponíveis")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundColor(Theme.mutedText)
+                }
+                Spacer(minLength: 4)
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(colors: [Theme.accentLight, Theme.accent], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    Circle().stroke(.white.opacity(0.62), lineWidth: 1).padding(3)
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 13, weight: .black))
+                        .foregroundColor(Theme.accentText)
+                }
+                .frame(width: 34, height: 34)
+                .shadow(color: Theme.accent.opacity(0.28), radius: 7, x: 0, y: 3)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(LinearGradient(colors: [Theme.cardRaised.opacity(0.84), .black.opacity(0.50)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 15))
+            .overlay(RoundedRectangle(cornerRadius: 15).stroke(Theme.accent.opacity(0.22), lineWidth: 1))
+        }
+        .buttonStyle(StartButtonMotionStyle())
+        .accessibilityLabel("Abrir baralho completo, \(deck.count) cartas restantes")
+        .accessibilityIdentifier("open-full-deck")
+        .padding(.horizontal, 18)
+        .padding(.top, 9)
     }
 
     private var emptyDeck: some View {
@@ -287,6 +348,8 @@ struct CardsView: View {
             newDraws = Array(names.prefix(4).enumerated()).map { index, name in
                 (name, PlayingCard(rank: ranks[index], suit: suits[index]))
             }
+            let drawnLabels = Set(newDraws.map { $0.card.label })
+            deck.removeAll { drawnLabels.contains($0.label) }
         } else {
             if deck.count < names.count { deck = PlayingCard.deck().shuffled() }
             newDraws = names.map { ($0, deck.removeFirst()) }
@@ -297,6 +360,105 @@ struct CardsView: View {
         withAnimation(.spring(response: 0.46, dampingFraction: 0.80)) {
             draws = newDraws
             tiedNames = winners.count > 1 ? winners.map(\.name) : []
+        }
+    }
+}
+
+private struct FullDeckBrowser: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var cards = PlayingCard.deck()
+    let style: PlayingCardStyle
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
+    private let suits = ["♠", "♥", "♦", "♣"]
+
+    var body: some View {
+        ZStack {
+            TableBackground()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("BARALHO COMPLETO")
+                                .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                .tracking(1.6)
+                                .foregroundColor(Theme.accent)
+                            Text("52 cartas")
+                                .font(.system(size: 24, weight: .black, design: .rounded))
+                                .foregroundColor(.white)
+                        }
+                        Spacer()
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(Theme.accent)
+                                .frame(width: 38, height: 38)
+                                .background(.black.opacity(0.48), in: Circle())
+                                .overlay(Circle().stroke(.white.opacity(0.14), lineWidth: 1))
+                        }
+                        .buttonStyle(StartButtonMotionStyle())
+                        .accessibilityLabel("Fechar baralho")
+                        .accessibilityIdentifier("close-full-deck")
+                    }
+
+                    ForEach(suits, id: \.self) { suit in
+                        VStack(alignment: .leading, spacing: 9) {
+                            HStack(spacing: 7) {
+                                Text(suit)
+                                    .font(.system(size: 17, weight: .black, design: .serif))
+                                    .foregroundColor(isRedSuit(suit) ? Color(red: 0.94, green: 0.32, blue: 0.27) : Theme.accent)
+                                Text(suitName(suit).uppercased())
+                                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                    .tracking(1.2)
+                                    .foregroundColor(.white.opacity(0.72))
+                                Spacer()
+                                Text("13 CARTAS")
+                                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                                    .tracking(0.8)
+                                    .foregroundColor(.white.opacity(0.42))
+                            }
+
+                            LazyVGrid(columns: columns, spacing: 10) {
+                                ForEach(cards.filter { $0.suit == suit }) { card in
+                                    VStack(spacing: 4) {
+                                        PlayingCardFaceView(card: card, isWinner: false, style: style, width: 70)
+                                            .frame(width: 70, height: 100)
+                                        Text(card.label)
+                                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                            .foregroundColor(.white.opacity(0.62))
+                                    }
+                                    .accessibilityElement(children: .ignore)
+                                    .accessibilityLabel("Carta \(card.rankLabel) de \(suitName(suit))")
+                                    .accessibilityIdentifier("full-deck-card-\(suit)-\(card.rank)")
+                                }
+                            }
+                        }
+                        .padding(12)
+                        .background(.black.opacity(0.30), in: RoundedRectangle(cornerRadius: 17))
+                        .overlay(RoundedRectangle(cornerRadius: 17).stroke(.white.opacity(0.08), lineWidth: 1))
+                    }
+                }
+                .padding(18)
+                .frame(maxWidth: 560)
+                .frame(maxWidth: .infinity)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .background(Theme.background)
+    }
+
+    private func isRedSuit(_ suit: String) -> Bool {
+        suit == "♥" || suit == "♦"
+    }
+
+    private func suitName(_ suit: String) -> String {
+        switch suit {
+        case "♠": return "Espadas"
+        case "♥": return "Copas"
+        case "♦": return "Ouros"
+        default: return "Paus"
         }
     }
 }

@@ -83,6 +83,10 @@ final class STARTScreenshotTests: XCTestCase {
             XCTAssertTrue(styleButton.isHittable, "The \(style) deck style should be visible")
             styleButton.tap()
         }
+        app.buttons["open-full-deck"].tap()
+        XCTAssertTrue(app.staticTexts["52 cartas"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["ESPADAS"].exists)
+        app.buttons["close-full-deck"].tap()
         app.buttons["deal-cards-button"].tap()
         sleep(1)
         XCTAssertTrue(app.descendants(matching: .any)["cards-result"].exists)

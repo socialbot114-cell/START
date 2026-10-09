@@ -20,6 +20,7 @@ struct ContentView: View {
         if arguments.contains("-capture-dice") { return [.dice] }
         if arguments.contains("-capture-finger") { return [.finger] }
         if arguments.contains("-capture-cards") { return [.cards] }
+        if arguments.contains("-capture-full-deck") { return [.cards] }
         if arguments.contains("-capture-situations") { return [.situations] }
         return []
     }
