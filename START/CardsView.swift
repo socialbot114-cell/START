@@ -1,5 +1,45 @@
 import SwiftUI
 
+enum PlayingCardStyle: String, CaseIterable, Identifiable {
+    case classic
+    case casino
+    case vintage
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .classic: return "Clássico"
+        case .casino: return "Cassino"
+        case .vintage: return "Vintage"
+        }
+    }
+
+    var backColors: [Color] {
+        switch self {
+        case .classic: return [Color(red: 0.12, green: 0.37, blue: 0.27), Color(red: 0.035, green: 0.16, blue: 0.12)]
+        case .casino: return [Color(red: 0.25, green: 0.13, blue: 0.16), Color(red: 0.055, green: 0.06, blue: 0.08)]
+        case .vintage: return [Color(red: 0.53, green: 0.25, blue: 0.15), Color(red: 0.24, green: 0.08, blue: 0.055)]
+        }
+    }
+
+    var paperColors: [Color] {
+        switch self {
+        case .classic: return [Color(red: 1.0, green: 0.99, blue: 0.95), Color(red: 0.93, green: 0.91, blue: 0.84)]
+        case .casino: return [Color(red: 1.0, green: 1.0, blue: 0.98), Color(red: 0.93, green: 0.93, blue: 0.89)]
+        case .vintage: return [Color(red: 0.98, green: 0.93, blue: 0.81), Color(red: 0.88, green: 0.79, blue: 0.63)]
+        }
+    }
+
+    var ornament: Color {
+        switch self {
+        case .classic: return Theme.accentLight
+        case .casino: return Color(red: 1.0, green: 0.76, blue: 0.32)
+        case .vintage: return Color(red: 0.89, green: 0.67, blue: 0.36)
+        }
+    }
+}
+
 struct CardsView: View {
     @EnvironmentObject private var players: PlayerStore
     @Environment(\.dismiss) private var dismiss
@@ -9,7 +49,12 @@ struct CardsView: View {
     @State private var tiedNames: [String] = []
     @State private var dealCount = 0
     @State private var fanIsOpen = false
+    @AppStorage("start.playingCardStyle") private var selectedStyleRawValue = "classic"
     private let screenshotMode = ProcessInfo.processInfo.arguments.contains("-screenshot-mode")
+
+    private var selectedStyle: PlayingCardStyle {
+        PlayingCardStyle(rawValue: selectedStyleRawValue) ?? .classic
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -35,6 +80,7 @@ struct CardsView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 20)
+                        deckStylePicker
                         Spacer(minLength: 18)
 
                         if draws.isEmpty {
@@ -94,8 +140,43 @@ struct CardsView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            if ProcessInfo.processInfo.arguments.contains("-capture-cards"), draws.isEmpty { deal() }
+            if ProcessInfo.processInfo.arguments.contains("-capture-cards") {
+                selectedStyleRawValue = PlayingCardStyle.classic.rawValue
+                if draws.isEmpty { deal() }
+            }
         }
+    }
+
+    private var deckStylePicker: some View {
+        HStack(spacing: 8) {
+            ForEach(PlayingCardStyle.allCases) { style in
+                let isSelected = selectedStyle == style
+                Button {
+                    GameFeedback.impact(.soft)
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.76)) {
+                        selectedStyleRawValue = style.rawValue
+                    }
+                } label: {
+                    VStack(spacing: 5) {
+                        PlayingCardBackView(style: style, width: 31)
+                        Text(style.title)
+                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .foregroundColor(isSelected ? Theme.accentLight : .white.opacity(0.72))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(isSelected ? style.backColors[0].opacity(0.42) : .black.opacity(0.28), in: RoundedRectangle(cornerRadius: 13))
+                    .overlay(RoundedRectangle(cornerRadius: 13).stroke(isSelected ? Theme.accent.opacity(0.72) : .white.opacity(0.10), lineWidth: 1))
+                }
+                .buttonStyle(StartButtonMotionStyle())
+                .accessibilityLabel("Estilo de baralho: \(style.title)")
+                .accessibilityIdentifier("card-style-\(style.id)")
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 13)
     }
 
     private var emptyDeck: some View {
@@ -104,13 +185,13 @@ struct CardsView: View {
                 .fill(LinearGradient(colors: [Theme.card.opacity(0.88), .black.opacity(0.66)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(RoundedRectangle(cornerRadius: 26).stroke(.white.opacity(0.14), lineWidth: 1))
             ZStack {
-                PlayingCardBackView(color: Theme.green, width: 126)
+                PlayingCardBackView(style: selectedStyle, width: 126)
                     .rotationEffect(.degrees(fanIsOpen ? -14 : -10))
                     .offset(x: fanIsOpen ? -44 : -38, y: fanIsOpen ? -5 : 3)
-                PlayingCardBackView(color: Color(red: 0.54, green: 0.16, blue: 0.11), width: 126)
+                PlayingCardBackView(style: selectedStyle, width: 126)
                     .rotationEffect(.degrees(fanIsOpen ? 13 : 9))
                     .offset(x: fanIsOpen ? 44 : 38, y: fanIsOpen ? -5 : 3)
-                PlayingCardBackView(color: Color(red: 0.10, green: 0.24, blue: 0.52), width: 126)
+                PlayingCardBackView(style: selectedStyle, width: 126)
                     .rotationEffect(.degrees(fanIsOpen ? 1 : 0))
                     .offset(y: fanIsOpen ? -12 : -2)
                 VStack(spacing: 8) {
@@ -159,6 +240,7 @@ struct CardsView: View {
                             name: entry.name,
                             card: entry.card,
                             isWinner: isWinner(entry),
+                            style: selectedStyle,
                             celebrates: winningCardIndex == index,
                             index: index,
                             width: cardWidth
@@ -200,7 +282,7 @@ struct CardsView: View {
 
         let newDraws: [(name: String, card: PlayingCard)]
         if screenshotMode && dealCount == 1 {
-            let ranks = [7, 14, 10, 5]
+            let ranks = [7, 14, 12, 5]
             let suits = ["♦", "♥", "♠", "♣"]
             newDraws = Array(names.prefix(4).enumerated()).map { index, name in
                 (name, PlayingCard(rank: ranks[index], suit: suits[index]))
@@ -223,6 +305,7 @@ private struct DealtPlayingCardView: View {
     let name: String
     let card: PlayingCard
     let isWinner: Bool
+    let style: PlayingCardStyle
     let celebrates: Bool
     let index: Int
     let width: CGFloat
@@ -234,10 +317,10 @@ private struct DealtPlayingCardView: View {
     var body: some View {
         VStack(spacing: 6) {
             ZStack {
-                PlayingCardBackView(color: Theme.green, width: width)
+                PlayingCardBackView(style: style, width: width)
                     .rotation3DEffect(.degrees(!reduceMotion && isRevealed ? 90 : 0), axis: (x: 0, y: 1, z: 0))
                     .opacity(isRevealed ? 0 : 1)
-                PlayingCardFaceView(card: card, isWinner: isWinner, width: width)
+                PlayingCardFaceView(card: card, isWinner: isWinner, style: style, width: width)
                     .rotation3DEffect(.degrees(!reduceMotion && !isRevealed ? -90 : 0), axis: (x: 0, y: 1, z: 0))
                     .opacity(isRevealed ? 1 : 0)
             }
@@ -278,6 +361,7 @@ private struct DealtPlayingCardView: View {
 private struct PlayingCardFaceView: View {
     let card: PlayingCard
     let isWinner: Bool
+    let style: PlayingCardStyle
     let width: CGFloat
 
     private var height: CGFloat { width * 1.43 }
@@ -285,7 +369,7 @@ private struct PlayingCardFaceView: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: width * 0.14)
-            .fill(LinearGradient(colors: [Color(red: 1.0, green: 0.99, blue: 0.95), Color(red: 0.93, green: 0.91, blue: 0.84)], startPoint: .topLeading, endPoint: .bottomTrailing))
+            .fill(LinearGradient(colors: style.paperColors, startPoint: .topLeading, endPoint: .bottomTrailing))
             .overlay {
                 VStack(alignment: .leading, spacing: 0) {
                     cornerIndex
@@ -325,17 +409,7 @@ private struct PlayingCardFaceView: View {
                 .font(.system(size: width * 0.55, weight: .regular, design: .serif))
                 .foregroundColor(ink)
         } else if card.rank >= 11 {
-            VStack(spacing: 4) {
-                Image(systemName: "sparkle")
-                    .font(.system(size: width * 0.13, weight: .light))
-                    .foregroundColor(Theme.accent.opacity(0.82))
-                Text(card.rankLabel)
-                    .font(.system(size: width * 0.48, weight: .black, design: .serif))
-                    .foregroundColor(ink)
-                Text(card.suit)
-                    .font(.system(size: width * 0.30, weight: .bold, design: .serif))
-                    .foregroundColor(ink)
-            }
+            CourtCardArt(card: card, style: style, width: width)
         } else {
             GeometryReader { geometry in
                 ForEach(Array(pipPositions.enumerated()), id: \.offset) { _, point in
@@ -367,22 +441,73 @@ private struct PlayingCardFaceView: View {
     }
 }
 
+private struct CourtCardArt: View {
+    let card: PlayingCard
+    let style: PlayingCardStyle
+    let width: CGFloat
+
+    private var ink: Color { card.isRed ? Color(red: 0.78, green: 0.10, blue: 0.14) : Color(red: 0.10, green: 0.12, blue: 0.14) }
+    private var emblem: String { card.rank == 11 ? "sparkles" : "crown.fill" }
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: width * 0.08)
+                .fill(style.ornament.opacity(0.10))
+                .overlay(RoundedRectangle(cornerRadius: width * 0.08).stroke(style.ornament.opacity(0.48), lineWidth: 0.8))
+            VStack(spacing: 1) {
+                portraitHalf
+                Rectangle()
+                    .fill(style.ornament.opacity(0.54))
+                    .frame(height: 0.7)
+                    .padding(.horizontal, width * 0.06)
+                portraitHalf.rotationEffect(.degrees(180))
+            }
+            .padding(width * 0.05)
+        }
+    }
+
+    private var portraitHalf: some View {
+        HStack(spacing: 1) {
+            Image(systemName: emblem)
+                .font(.system(size: width * 0.12, weight: .semibold))
+                .foregroundColor(style.ornament)
+                .frame(width: width * 0.16)
+            VStack(spacing: -3) {
+                Image(systemName: "person.fill")
+                    .font(.system(size: width * 0.20, weight: .medium))
+                    .foregroundColor(ink.opacity(0.88))
+                Text(card.suit)
+                    .font(.system(size: width * 0.12, weight: .bold, design: .serif))
+                    .foregroundColor(ink)
+            }
+            .frame(maxWidth: .infinity)
+            Text(card.rankLabel)
+                .font(.system(size: width * 0.20, weight: .black, design: .serif))
+                .foregroundColor(ink)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
 private struct PlayingCardBackView: View {
-    let color: Color
+    let style: PlayingCardStyle
     let width: CGFloat
     private var height: CGFloat { width * 1.43 }
 
     var body: some View {
         RoundedRectangle(cornerRadius: width * 0.14)
-            .fill(LinearGradient(colors: [color, color.opacity(0.60)], startPoint: .topLeading, endPoint: .bottomTrailing))
+            .fill(LinearGradient(colors: style.backColors, startPoint: .topLeading, endPoint: .bottomTrailing))
             .overlay(RoundedRectangle(cornerRadius: width * 0.14).stroke(.white.opacity(0.76), lineWidth: 1).padding(width * 0.055))
-            .overlay(RoundedRectangle(cornerRadius: width * 0.14).stroke(Theme.accent.opacity(0.72), lineWidth: 0.9).padding(width * 0.105))
+            .overlay(RoundedRectangle(cornerRadius: width * 0.14).stroke(style.ornament.opacity(0.82), lineWidth: 0.9).padding(width * 0.105))
             .overlay {
                 ZStack {
-                    Circle().stroke(.white.opacity(0.30), lineWidth: 1).padding(width * 0.20)
-                    Circle().stroke(Theme.accent.opacity(0.48), lineWidth: 0.7).padding(width * 0.28)
+                    RoundedRectangle(cornerRadius: width * 0.08)
+                        .stroke(style.ornament.opacity(0.26), lineWidth: 0.8)
+                        .padding(width * 0.18)
+                    Circle().stroke(.white.opacity(0.32), lineWidth: 1).padding(width * 0.23)
+                    Circle().stroke(style.ornament.opacity(0.60), lineWidth: 0.7).padding(width * 0.30)
                     VStack(spacing: 3) {
-                        StartPawn().fill(Theme.accentLight).frame(width: width * 0.24, height: height * 0.22)
+                        StartPawn().fill(style.ornament).frame(width: width * 0.24, height: height * 0.22)
                         Text("START")
                             .font(.system(size: width * 0.075, weight: .black, design: .rounded))
                             .tracking(1.4)
@@ -390,7 +515,7 @@ private struct PlayingCardBackView: View {
                     }
                     Image(systemName: "sparkle")
                         .font(.system(size: width * 0.12, weight: .light))
-                        .foregroundColor(Theme.accentLight.opacity(0.88))
+                        .foregroundColor(style.ornament.opacity(0.92))
                         .offset(y: -height * 0.34)
                 }
             }

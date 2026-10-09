@@ -78,6 +78,11 @@ final class STARTScreenshotTests: XCTestCase {
         // Cards
         app.buttons["mode-cards"].tap()
         XCTAssertTrue(app.buttons["deal-cards-button"].waitForExistence(timeout: 5))
+        for style in ["classic", "casino", "vintage", "classic"] {
+            let styleButton = app.buttons["card-style-\(style)"]
+            XCTAssertTrue(styleButton.isHittable, "The \(style) deck style should be visible")
+            styleButton.tap()
+        }
         app.buttons["deal-cards-button"].tap()
         sleep(1)
         XCTAssertTrue(app.descendants(matching: .any)["cards-result"].exists)
