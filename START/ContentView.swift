@@ -323,52 +323,80 @@ struct PlayerManagerView: View {
     @EnvironmentObject private var players: PlayerStore
     @Environment(\.dismiss) private var dismiss
     @State private var newName = ""
+    @AppStorage("start.effects.enabled") private var effectsEnabled = true
 
     var body: some View {
         NavigationStack {
             ZStack {
                 TableBackground()
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("Quem está na mesa?")
-                        .font(.system(size: 23, weight: .heavy, design: .rounded))
-                        .foregroundColor(.white)
-                    ForEach(Array(players.players.enumerated()), id: \.offset) { index, name in
-                        HStack(spacing: 10) {
-                            Text(String(name.prefix(1)).uppercased())
-                                .font(.system(size: 12, weight: .heavy, design: .rounded))
-                                .foregroundColor(Theme.accentText)
-                                .frame(width: 32, height: 32)
-                                .background(Theme.accent, in: Circle())
-                            Text(name).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.white)
-                            Spacer()
-                            Button {
-                                players.players.remove(at: index)
-                            } label: {
-                                Image(systemName: "minus.circle.fill").foregroundColor(.white.opacity(0.48))
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Quem está na mesa?")
+                            .font(.system(size: 23, weight: .heavy, design: .rounded))
+                            .foregroundColor(.white)
+
+                        Toggle(isOn: $effectsEnabled) {
+                            HStack(spacing: 10) {
+                                Image(systemName: effectsEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(Theme.accent)
+                                    .frame(width: 25)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Sons e vibração")
+                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
+                                    Text("Efeitos sutis durante a partida")
+                                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                                        .foregroundColor(Theme.mutedText)
+                                }
                             }
-                            .accessibilityLabel("Remover \(name)")
                         }
-                        .padding(10)
-                        .background(.black.opacity(0.4), in: RoundedRectangle(cornerRadius: 13))
-                    }
-                    HStack(spacing: 9) {
-                        TextField("Nome do jogador", text: $newName)
-                            .textFieldStyle(.roundedBorder)
-                            .accessibilityIdentifier("player-name-field")
-                        Button("Adicionar") {
-                            players.add(name: newName)
-                            newName = ""
+                        .tint(Theme.accent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(.black.opacity(0.42), in: RoundedRectangle(cornerRadius: 14))
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(.white.opacity(0.12), lineWidth: 1))
+                        .accessibilityIdentifier("effects-toggle")
+
+                        ForEach(Array(players.players.enumerated()), id: \.offset) { index, name in
+                            HStack(spacing: 10) {
+                                Text(String(name.prefix(1)).uppercased())
+                                    .font(.system(size: 12, weight: .heavy, design: .rounded))
+                                    .foregroundColor(Theme.accentText)
+                                    .frame(width: 32, height: 32)
+                                    .background(Theme.accent, in: Circle())
+                                Text(name).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.white)
+                                Spacer()
+                                Button {
+                                    players.players.remove(at: index)
+                                } label: {
+                                    Image(systemName: "minus.circle.fill").foregroundColor(.white.opacity(0.48))
+                                }
+                                .accessibilityLabel("Remover \(name)")
+                            }
+                            .padding(10)
+                            .background(.black.opacity(0.4), in: RoundedRectangle(cornerRadius: 13))
                         }
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundColor(Theme.accentText)
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 11)
-                        .background(Theme.accent, in: RoundedRectangle(cornerRadius: 11))
-                        .accessibilityIdentifier("add-player-button")
+
+                        HStack(spacing: 9) {
+                            TextField("Nome do jogador", text: $newName)
+                                .textFieldStyle(.roundedBorder)
+                                .accessibilityIdentifier("player-name-field")
+                            Button("Adicionar") {
+                                players.add(name: newName)
+                                newName = ""
+                            }
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundColor(Theme.accentText)
+                            .padding(.horizontal, 13)
+                            .padding(.vertical, 11)
+                            .background(Theme.accent, in: RoundedRectangle(cornerRadius: 11))
+                            .accessibilityIdentifier("add-player-button")
+                        }
                     }
-                    Spacer(minLength: 0)
+                    .padding(20)
                 }
-                .padding(20)
+                .scrollIndicators(.hidden)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

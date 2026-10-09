@@ -144,6 +144,7 @@ struct CardsView: View {
         let stageWidth = min(560, availableWidth) - 36
         let cardWidth = min(122, max(58, (stageWidth - gap * CGFloat(visibleCount - 1) - 24) / CGFloat(visibleCount)))
         let cardHeight = cardWidth * 1.43
+        let winningCardIndex = tiedNames.isEmpty ? draws.firstIndex(where: { isWinner($0) }) : nil
 
         return ZStack {
             RoundedRectangle(cornerRadius: 24)
@@ -158,6 +159,7 @@ struct CardsView: View {
                             name: entry.name,
                             card: entry.card,
                             isWinner: isWinner(entry),
+                            celebrates: winningCardIndex == index,
                             index: index,
                             width: cardWidth
                         )
@@ -187,6 +189,7 @@ struct CardsView: View {
     }
 
     private func deal() {
+        GameFeedback.impact(.soft)
         let names: [String]
         if !tiedNames.isEmpty {
             names = tiedNames
@@ -220,6 +223,7 @@ private struct DealtPlayingCardView: View {
     let name: String
     let card: PlayingCard
     let isWinner: Bool
+    let celebrates: Bool
     let index: Int
     let width: CGFloat
     @State private var isRevealed = false
@@ -258,6 +262,12 @@ private struct DealtPlayingCardView: View {
                 try? await Task.sleep(nanoseconds: UInt64(90 + index * 125) * 1_000_000)
             }
             guard !Task.isCancelled else { return }
+            if celebrates {
+                GameFeedback.play(.winner)
+                GameFeedback.success()
+            } else {
+                GameFeedback.play(.cardFlip)
+            }
             withAnimation(reduceMotion ? .easeInOut(duration: 0.12) : .spring(response: 0.50, dampingFraction: 0.72)) {
                 isRevealed = true
             }

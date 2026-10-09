@@ -20,6 +20,7 @@
 		ABCD0000000000000000008A /* Branding.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD0000000000000000006A /* Branding.swift */; };
 		ABCD0000000000000000008B /* Dice3DScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD0000000000000000006B /* Dice3DScene.swift */; };
 		ABCD0000000000000000008C /* Art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = ABCD0000000000000000006C /* Art.scnassets */; };
+		ABCD0000000000000000008D /* GameFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD0000000000000000006D /* GameFeedback.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +47,7 @@
 		ABCD0000000000000000006A /* Branding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Branding.swift; sourceTree = "<group>"; };
 		ABCD0000000000000000006B /* Dice3DScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dice3DScene.swift; sourceTree = "<group>"; };
 		ABCD0000000000000000006C /* Art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Art.scnassets; sourceTree = "<group>"; };
+		ABCD0000000000000000006D /* GameFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameFeedback.swift; sourceTree = "<group>"; };
 		ABCD00000000000000000070 /* START.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = START.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABCD00000000000000000071 /* STARTUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = STARTUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -90,6 +92,7 @@
 				ABCD00000000000000000067 /* SituationDeckView.swift */,
 				ABCD0000000000000000006A /* Branding.swift */,
 				ABCD0000000000000000006B /* Dice3DScene.swift */,
+				ABCD0000000000000000006D /* GameFeedback.swift */,
 				ABCD00000000000000000068 /* Assets.xcassets */,
 				ABCD0000000000000000006C /* Art.scnassets */,
 			);
@@ -221,6 +224,7 @@
 				ABCD00000000000000000087 /* SituationDeckView.swift in Sources */,
 				ABCD0000000000000000008A /* Branding.swift in Sources */,
 				ABCD0000000000000000008B /* Dice3DScene.swift in Sources */,
+				ABCD0000000000000000008D /* GameFeedback.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -81,6 +81,8 @@ struct SituationDeckView: View {
                                 withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
                                     confirmedPlayer = selectedPlayer
                                 }
+                                GameFeedback.play(.winner)
+                                GameFeedback.success()
                             }
                         } label: {
                             HStack {
@@ -97,6 +99,8 @@ struct SituationDeckView: View {
                         .accessibilityIdentifier("confirm-situation-button")
 
                         Button(confirmedPlayer == nil ? "Ninguém se encaixa · tirar outra" : "Embaralhar o baralho") {
+                            GameFeedback.impact(.soft)
+                            GameFeedback.play(.cardFlip)
                             withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
                                 if confirmedPlayer != nil {
                                     deck = SituationDeck.shuffled()
@@ -171,6 +175,7 @@ struct SituationDeckView: View {
     private func playerChip(_ name: String) -> some View {
         let isSelected = selectedPlayer == name
         return Button {
+            GameFeedback.impact(.soft)
             withAnimation(.spring(response: 0.28, dampingFraction: 0.76)) {
                 selectedPlayer = name
             }

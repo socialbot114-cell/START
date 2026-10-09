@@ -38,6 +38,13 @@ final class STARTScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["mode-cards"].isHittable)
         XCTAssertTrue(app.buttons["mode-situations"].isHittable)
 
+        app.buttons["Editar jogadores"].tap()
+        let effectsToggle = app.descendants(matching: .any)["effects-toggle"]
+        XCTAssertTrue(effectsToggle.waitForExistence(timeout: 5))
+        effectsToggle.tap()
+        effectsToggle.tap()
+        app.buttons["Concluir"].tap()
+
         app.buttons["start-title"].tap()
         XCTAssertTrue(app.staticTexts["Como vamos descobrir quem começa?"].waitForExistence(timeout: 5))
         goBackIfNeeded()

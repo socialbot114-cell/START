@@ -129,6 +129,10 @@ struct MultiTouchView: UIViewRepresentable {
         let view = TouchCanvas()
         view.onUpdate = { count, winner, message in
             DispatchQueue.main.async {
+                if winner != nil {
+                    GameFeedback.play(.winner)
+                    GameFeedback.success()
+                }
                 touchCount = count
                 winnerIndex = winner
                 status = message

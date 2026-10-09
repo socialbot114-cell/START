@@ -42,6 +42,7 @@ struct DiceView: View {
                             HStack(spacing: 7) {
                                 ForEach(dice) { die in
                                     Button {
+                                        GameFeedback.impact(.soft)
                                         withAnimation(.spring(response: 0.28, dampingFraction: 0.75)) {
                                             sides = die.rawValue
                                             result = min(result, sides)
@@ -145,16 +146,20 @@ struct DiceView: View {
         guard !rolling else { return }
         rolling = true
         hasRolled = false
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        GameFeedback.impact(.medium)
+        GameFeedback.play(.diceRoll)
         result = screenshotMode ? min(4, sides) : Dice.roll(sides: sides)
         rollToken += 1
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.08) {
-            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            GameFeedback.impact(.heavy)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.30) {
-            hasRolled = true
-            rolling = false
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
+                hasRolled = true
+                rolling = false
+            }
+            GameFeedback.play(.winner)
+            GameFeedback.success()
         }
     }
 
