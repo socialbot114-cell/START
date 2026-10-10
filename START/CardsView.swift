@@ -608,15 +608,15 @@ private struct PlayingCardFaceView: View {
         case 4: return [CGPoint(x: 0.34, y: 0.28), CGPoint(x: 0.66, y: 0.28), CGPoint(x: 0.34, y: 0.72), CGPoint(x: 0.66, y: 0.72)]
         case 5: return [CGPoint(x: 0.34, y: 0.25), CGPoint(x: 0.66, y: 0.25), CGPoint(x: 0.5, y: 0.5), CGPoint(x: 0.34, y: 0.75), CGPoint(x: 0.66, y: 0.75)]
         case 6: return [CGPoint(x: 0.34, y: 0.22), CGPoint(x: 0.66, y: 0.22), CGPoint(x: 0.34, y: 0.5), CGPoint(x: 0.66, y: 0.5), CGPoint(x: 0.34, y: 0.78), CGPoint(x: 0.66, y: 0.78)]
-        case 7: return Array(pipPositionsForEight.prefix(6)) + [CGPoint(x: 0.5, y: 0.22)]
+        case 7: return [CGPoint(x: 0.32, y: 0.18), CGPoint(x: 0.68, y: 0.18), CGPoint(x: 0.32, y: 0.5), CGPoint(x: 0.68, y: 0.5), CGPoint(x: 0.32, y: 0.82), CGPoint(x: 0.68, y: 0.82), CGPoint(x: 0.5, y: 0.34)]
         case 8: return pipPositionsForEight
         case 9: return [CGPoint(x: 0.32, y: 0.22), CGPoint(x: 0.5, y: 0.22), CGPoint(x: 0.68, y: 0.22), CGPoint(x: 0.32, y: 0.5), CGPoint(x: 0.5, y: 0.5), CGPoint(x: 0.68, y: 0.5), CGPoint(x: 0.32, y: 0.78), CGPoint(x: 0.5, y: 0.78), CGPoint(x: 0.68, y: 0.78)]
-        default: return [CGPoint(x: 0.34, y: 0.18), CGPoint(x: 0.66, y: 0.18), CGPoint(x: 0.34, y: 0.34), CGPoint(x: 0.66, y: 0.34), CGPoint(x: 0.34, y: 0.5), CGPoint(x: 0.66, y: 0.5), CGPoint(x: 0.34, y: 0.66), CGPoint(x: 0.66, y: 0.66), CGPoint(x: 0.34, y: 0.82), CGPoint(x: 0.66, y: 0.82)]
+        default: return pipPositionsForEight + [CGPoint(x: 0.5, y: 0.29), CGPoint(x: 0.5, y: 0.71)]
         }
     }
 
     private var pipPositionsForEight: [CGPoint] {
-        [CGPoint(x: 0.34, y: 0.20), CGPoint(x: 0.66, y: 0.20), CGPoint(x: 0.34, y: 0.40), CGPoint(x: 0.66, y: 0.40), CGPoint(x: 0.34, y: 0.60), CGPoint(x: 0.66, y: 0.60), CGPoint(x: 0.34, y: 0.80), CGPoint(x: 0.66, y: 0.80)]
+        [CGPoint(x: 0.32, y: 0.12), CGPoint(x: 0.68, y: 0.12), CGPoint(x: 0.32, y: 0.37), CGPoint(x: 0.68, y: 0.37), CGPoint(x: 0.32, y: 0.63), CGPoint(x: 0.68, y: 0.63), CGPoint(x: 0.32, y: 0.88), CGPoint(x: 0.68, y: 0.88)]
     }
 }
 
@@ -663,7 +663,7 @@ private struct CardPaperGrain: View {
                 var grain = Path()
                 grain.move(to: CGPoint(x: x, y: y))
                 grain.addLine(to: CGPoint(x: min(size.width, x + length), y: y + 0.35))
-                context.stroke(grain, with: .color(ink.opacity(0.055)), lineWidth: 0.35)
+                context.stroke(grain, with: .color(ink.opacity(0.025)), lineWidth: 0.3)
             }
         }
         .allowsHitTesting(false)

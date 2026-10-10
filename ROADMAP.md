@@ -75,6 +75,22 @@ Os modos atuais de início rápido (dados, dedos, carta alta e situações) perm
 - [x] Redesenhar Valete/Rainha/Rei em gravura vetorial, acrescentar papel texturizado e padrões distintos aos versos Clássico, Cassino e Vintage.
 - [x] Gerar capturas dos seis dados, reel e dos três temas do baralho para revisão.
 
+### 8. Próxima rodada de polimento
+
+- [ ] Dados: sombra de contato mais próxima e legível; variar definição e espalhamento com a elevação.
+- [ ] Dados: luz principal ampla e neutra, preenchimento das faces escuras e preservação das cores da resina.
+- [ ] Rolagem: lançamento lateral, impactos menores e desaceleração com sensação de peso.
+- [ ] Enquadramento: posição de repouso consistente e revisão durante a animação em telas menores.
+- [ ] Feltro: fibras menos regulares, granulação fina, iluminação central discreta e borda dourada suavizada.
+- [ ] Baralho: retratos J/Q/K próprios, composição espelhada, vestimentas e ornamentos por naipe.
+- [ ] Baralho: hachuras e textura de papel mais delicadas, cantos menos arredondados e revisão dos pips de 7/8/10.
+- [ ] Interação: tocar numa carta para ampliá-la e destacar a vencedora com elevação discreta.
+- [ ] Home: tornar os atalhos Roletas e Partidas mais explícitos.
+- [ ] Acessibilidade: revisar contraste, áreas de toque e texto ampliado.
+- [ ] Validação: comparar antes/depois de dados e cartas e executar build/testes no simulador.
+
+Ordem: luz/sombra → feltro e movimento → arte das cartas → interação e acessibilidade.
+
 ## Modelo de domínio proposto
 
 - **Grupo:** mesa local criada pelos jogadores e seus participantes.

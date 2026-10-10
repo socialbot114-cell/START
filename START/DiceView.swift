@@ -251,9 +251,10 @@ private struct DiceFeltSurface: View {
                         let length = CGFloat(4 + fiber % 13)
                         var thread = Path()
                         thread.move(to: CGPoint(x: x, y: y))
-                        thread.addLine(to: CGPoint(x: min(canvasSize.width, x + length), y: y + (fiber.isMultiple(of: 2) ? 0.6 : -0.6)))
+                        let slope = CGFloat((fiber * 17) % 11 - 5) * 0.32
+                        thread.addLine(to: CGPoint(x: min(canvasSize.width, x + length * 0.55), y: y + slope))
                         let tone = fiber.isMultiple(of: 3) ? Color.white : Color.black
-                        context.stroke(thread, with: .color(tone.opacity(0.035)), lineWidth: 0.55)
+                        context.stroke(thread, with: .color(tone.opacity(0.026)), lineWidth: 0.45)
                     }
 
                     for row in 0..<48 {
@@ -261,7 +262,7 @@ private struct DiceFeltSurface: View {
                         var weave = Path()
                         weave.move(to: CGPoint(x: 0, y: y))
                         weave.addLine(to: CGPoint(x: canvasSize.width, y: y + 1))
-                        context.stroke(weave, with: .color(Color.white.opacity(0.012)), lineWidth: 0.45)
+                        context.stroke(weave, with: .color(Color.white.opacity(0.005)), lineWidth: 0.35)
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 23))
@@ -282,7 +283,7 @@ private struct DiceFeltSurface: View {
                 .clipShape(RoundedRectangle(cornerRadius: 23))
 
                 RoundedRectangle(cornerRadius: 23)
-                    .stroke(Theme.accent.opacity(0.28), lineWidth: 1)
+                    .stroke(Theme.accent.opacity(0.18), lineWidth: 1)
             }
             .frame(width: size.width, height: size.height)
         }

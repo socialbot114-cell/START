@@ -168,8 +168,8 @@ private enum DiceGeometry {
 
         let key = SCNLight()
         key.type = .omni
-        key.intensity = 390
-        key.color = UIColor(red: 1.0, green: 0.82, blue: 0.57, alpha: 1)
+        key.intensity = 350
+        key.color = UIColor(red: 1.0, green: 0.96, blue: 0.89, alpha: 1)
         key.castsShadow = true
         key.shadowMode = .deferred
         key.shadowRadius = 7
@@ -182,8 +182,8 @@ private enum DiceGeometry {
 
         let fill = SCNLight()
         fill.type = .omni
-        fill.intensity = 350
-        fill.color = UIColor(red: 0.72, green: 0.82, blue: 0.92, alpha: 1)
+        fill.intensity = 420
+        fill.color = UIColor(red: 0.90, green: 0.94, blue: 1.0, alpha: 1)
         let fillNode = SCNNode()
         fillNode.light = fill
         fillNode.position = SCNVector3(3, 1, 4)
@@ -191,8 +191,8 @@ private enum DiceGeometry {
 
         let softbox = SCNLight()
         softbox.type = .area
-        softbox.intensity = 560
-        softbox.areaExtents = SIMD3<Float>(3.2, 2.4, 0)
+        softbox.intensity = 460
+        softbox.areaExtents = SIMD3<Float>(4.2, 3.2, 0)
         softbox.color = UIColor(red: 0.92, green: 0.95, blue: 1.0, alpha: 1)
         softbox.castsShadow = false
         let softboxNode = SCNNode()
@@ -203,7 +203,7 @@ private enum DiceGeometry {
 
         let rim = SCNLight()
         rim.type = .directional
-        rim.intensity = 300
+        rim.intensity = 220
         rim.color = warmKey
         let rimNode = SCNNode()
         rimNode.light = rim
@@ -212,15 +212,15 @@ private enum DiceGeometry {
 
         let ambient = SCNLight()
         ambient.type = .ambient
-        ambient.intensity = 210
+        ambient.intensity = 260
         ambient.color = UIColor(white: 0.58, alpha: 1)
         let ambientNode = SCNNode()
         ambientNode.light = ambient
         scene.rootNode.addChildNode(ambientNode)
 
-        let shadow = SCNNode(geometry: SCNPlane(width: 2.10, height: 0.52))
+        let shadow = SCNNode(geometry: SCNPlane(width: 2.35, height: 0.62))
         shadow.name = "dice-contact-shadow"
-        shadow.position = SCNVector3(0, -1.32, -0.38)
+        shadow.position = SCNVector3(0, -1.12, -0.38)
         shadow.eulerAngles.x = -0.10
         let shadowMaterial = SCNMaterial()
         shadowMaterial.diffuse.contents = UIColor.black
@@ -230,7 +230,7 @@ private enum DiceGeometry {
         shadowMaterial.transparencyMode = .aOne
         shadowMaterial.writesToDepthBuffer = false
         shadow.geometry?.materials = [shadowMaterial]
-        shadow.opacity = 0.42
+        shadow.opacity = 0.58
         scene.rootNode.addChildNode(shadow)
 
         die.position = SCNVector3(0, 0.06, 0)
@@ -282,9 +282,9 @@ private enum DiceGeometry {
         let restingX = node.position.x
         let duration: Float = 2.0
         let shadow = node.parent?.childNode(withName: "dice-contact-shadow", recursively: false)
-        let shadowPosition = shadow?.position ?? SCNVector3(0, -1.32, -0.38)
+        let shadowPosition = shadow?.position ?? SCNVector3(0, -1.12, -0.38)
         let shadowScale = shadow?.scale ?? SCNVector3(1, 1, 1)
-        let shadowOpacity = shadow?.opacity ?? 0.42
+        let shadowOpacity = shadow?.opacity ?? 0.58
         let tumble = SCNAction.customAction(duration: TimeInterval(duration)) { node, elapsed in
             let t = min(max(Float(elapsed) / duration, 0), 1)
             let eased = t < 0.76 ? 0.90 * (1 - pow(1 - t / 0.76, 2)) : 0.90 + 0.10 * ((t - 0.76) / 0.24)
@@ -297,12 +297,12 @@ private enum DiceGeometry {
 
             let launch = t < profile.launchFraction ? profile.lift * sin(.pi * t / profile.launchFraction) : 0
             let contactTime = max(0, t - profile.launchFraction)
-            let impacts = t > profile.launchFraction ? profile.impact * exp(-contactTime * 12) * abs(sin(contactTime * 36)) : 0
+            let impacts = t > profile.launchFraction ? profile.impact * 0.75 * exp(-contactTime * 14) * abs(sin(contactTime * 32)) : 0
             let height = launch + impacts
             node.position.y = restingY + launch + impacts
-            node.position.x = restingX + profile.drift * sin(t * .pi * 1.3) * decay
-            let bounce = 1 + 0.055 * sin(t * .pi) + 0.025 * impacts
-            node.simdScale = SIMD3<Float>(repeating: bounce)
+            node.position.x = restingX + profile.drift * 1.35 * sin(t * .pi * 1.3) * decay
+            // Keep physical size stable: height and rotation convey the impact.
+            node.simdScale = SIMD3<Float>(repeating: 1)
 
             if let shadow {
                 let spread = 1 + height * 0.62
