@@ -65,8 +65,15 @@ Os modos atuais de início rápido (dados, dedos, carta alta e situações) perm
 - [x] Executar testes dos fluxos principais de roletas, templates, criação local e conclusão de partida.
 - [ ] Ampliar cobertura automatizada para empate, correção de resultados e isolamento entre grupos/jogos.
 - [x] Configurar capturas das telas da biblioteca, templates, roleta, partida ao vivo, ranking e histórico.
-- [x] Revisar e copiar os 14 prints, seis dados e reel aprovados para `prints-finais/START-visual-review/`.
+- [x] Revisar e copiar os 16 prints (incluindo Clássico, Cassino e Vintage), seis dados e reel para `prints-finais/START-visual-review/`.
 - [ ] Avaliar sincronização/exportação e suporte a outras plataformas numa etapa futura.
+
+### 7. Polimento visual: dados e baralhos
+
+- [x] Reenquadrar os seis dados com a câmera a 6,5 e validar o espaço negativo entre formatos.
+- [x] Trocar o palco escuro quase liso por feltro petróleo texturizado, spotlight sutil e luzes mais equilibradas.
+- [x] Redesenhar Valete/Rainha/Rei em gravura vetorial, acrescentar papel texturizado e padrões distintos aos versos Clássico, Cassino e Vintage.
+- [x] Gerar capturas dos seis dados, reel e dos três temas do baralho para revisão.
 
 ## Modelo de domínio proposto
 
@@ -81,5 +88,5 @@ Os modos atuais de início rápido (dados, dedos, carta alta e situações) perm
 - App iOS existente: modos de dados, dedos, cartas e situações; rolagem 3D e capturas visuais.
 - `PlayerStore` agora guarda grupos, jogadores, roletas, giros e partidas em um snapshot Codable versionado no Application Support; relógios usam datas persistidas para retomada correta.
 - Roletas, templates, partidas, placares, resultados, rankings e histórico implementados na árvore de trabalho.
-- GitHub Actions passou no build e nos 6 testes UI; os 14 prints foram revisados e o reel contém os seis modelos na sequência correta.
+- GitHub Actions passou no build e nos 6 testes UI após o polimento visual; os 16 prints foram revisados e o reel mostra os seis modelos com mais respiro no palco de feltro.
 - A pasta `android/` contém trabalho local não rastreado; este ciclo preserva esses arquivos e foca na versão iOS.
