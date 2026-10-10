@@ -83,16 +83,7 @@ struct DiceView: View {
                         .accessibilityIdentifier("dice-picker")
 
                         ZStack(alignment: .bottom) {
-                            RoundedRectangle(cornerRadius: 23)
-                                .fill(LinearGradient(colors: [Color(red: 0.035, green: 0.075, blue: 0.065), .black.opacity(0.89)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            Circle()
-                                .fill(RadialGradient(colors: [resinColor(for: sides).opacity(0.24), .clear], center: .center, startRadius: 5, endRadius: 115))
-                                .frame(width: 230, height: 230)
-                                .offset(y: -4)
-                                .blur(radius: 10)
-                                .allowsHitTesting(false)
-                            RoundedRectangle(cornerRadius: 23)
-                                .stroke(Theme.accent.opacity(0.24), lineWidth: 1)
+                            DiceFeltSurface(accent: resinColor(for: sides))
                             Die3DView(sides: sides, result: result, rollToken: rollToken)
                                 .id(sides)
                                 .padding(.horizontal, 8)
@@ -233,4 +224,68 @@ struct DiceView: View {
 
 #Preview {
     NavigationStack { DiceView() }
+}
+
+private struct DiceFeltSurface: View {
+    let accent: Color
+
+    var body: some View {
+        GeometryReader { geometry in
+            let size = geometry.size
+            ZStack {
+                RoundedRectangle(cornerRadius: 23)
+                    .fill(LinearGradient(
+                        colors: [
+                            Color(red: 0.045, green: 0.13, blue: 0.115),
+                            Color(red: 0.025, green: 0.075, blue: 0.068),
+                            Color(red: 0.012, green: 0.034, blue: 0.032)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+
+                Canvas { context, canvasSize in
+                    for fiber in 0..<220 {
+                        let x = CGFloat((fiber * 67 + 19) % 997) / 997 * canvasSize.width
+                        let y = CGFloat((fiber * 139 + 47) % 991) / 991 * canvasSize.height
+                        let length = CGFloat(4 + fiber % 13)
+                        var thread = Path()
+                        thread.move(to: CGPoint(x: x, y: y))
+                        thread.addLine(to: CGPoint(x: min(canvasSize.width, x + length), y: y + (fiber.isMultiple(of: 2) ? 0.6 : -0.6)))
+                        let tone = fiber.isMultiple(of: 3) ? Color.white : Color.black
+                        context.stroke(thread, with: .color(tone.opacity(0.035)), lineWidth: 0.55)
+                    }
+
+                    for row in 0..<48 {
+                        let y = CGFloat(row) / 48 * canvasSize.height
+                        var weave = Path()
+                        weave.move(to: CGPoint(x: 0, y: y))
+                        weave.addLine(to: CGPoint(x: canvasSize.width, y: y + 1))
+                        context.stroke(weave, with: .color(Color.white.opacity(0.012)), lineWidth: 0.45)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 23))
+
+                RadialGradient(
+                    colors: [accent.opacity(0.16), accent.opacity(0.045), .clear],
+                    center: UnitPoint(x: 0.5, y: 0.42),
+                    startRadius: 8,
+                    endRadius: max(size.width, size.height) * 0.62
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 23))
+
+                LinearGradient(
+                    colors: [.white.opacity(0.035), .clear, .black.opacity(0.32)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 23))
+
+                RoundedRectangle(cornerRadius: 23)
+                    .stroke(Theme.accent.opacity(0.28), lineWidth: 1)
+            }
+            .frame(width: size.width, height: size.height)
+        }
+        .accessibilityHidden(true)
+    }
 }

@@ -101,6 +101,8 @@ jobs:
           capture_screen 11-ranking ranking 1
           capture_screen 12-history history 1
           capture_screen 13-templates templates 1
+          capture_screen 14-cards-casino cards-casino 2
+          capture_screen 15-cards-vintage cards-vintage 2
 
           capture_die_frame() {
             local sides="$1"
@@ -133,8 +135,8 @@ jobs:
           mkdir -p visual-review/screenshots visual-review/dice-rolls
           count=$(find visual-review/screenshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')
           echo "Captured $count full-screen PNGs."
-          if [ "$count" -ne 14 ]; then
-            echo "Expected 14 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
+          if [ "$count" -ne 16 ]; then
+            echo "Expected 16 simulator screenshots, received $count." > visual-review/SCREENSHOTS-MISSING.txt
           fi
           dice_count=$(find visual-review/dice-rolls -maxdepth 1 -type f -name 'D*.png' | wc -l | tr -d ' ')
           echo "Captured $dice_count die-result PNGs."

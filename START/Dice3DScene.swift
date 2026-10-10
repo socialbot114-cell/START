@@ -162,12 +162,13 @@ private enum DiceGeometry {
         camera.wantsHDR = true
         let cameraNode = SCNNode()
         cameraNode.camera = camera
-        cameraNode.position = SCNVector3(0, 0, 5.8)
+        // Add breathing room around the die while keeping the same neutral perspective.
+        cameraNode.position = SCNVector3(0, 0, 6.5)
         scene.rootNode.addChildNode(cameraNode)
 
         let key = SCNLight()
         key.type = .omni
-        key.intensity = 460
+        key.intensity = 390
         key.color = UIColor(red: 1.0, green: 0.82, blue: 0.57, alpha: 1)
         key.castsShadow = true
         key.shadowMode = .deferred
@@ -181,7 +182,7 @@ private enum DiceGeometry {
 
         let fill = SCNLight()
         fill.type = .omni
-        fill.intensity = 440
+        fill.intensity = 350
         fill.color = UIColor(red: 0.72, green: 0.82, blue: 0.92, alpha: 1)
         let fillNode = SCNNode()
         fillNode.light = fill
@@ -190,7 +191,7 @@ private enum DiceGeometry {
 
         let softbox = SCNLight()
         softbox.type = .area
-        softbox.intensity = 720
+        softbox.intensity = 560
         softbox.areaExtents = SIMD3<Float>(3.2, 2.4, 0)
         softbox.color = UIColor(red: 0.92, green: 0.95, blue: 1.0, alpha: 1)
         softbox.castsShadow = false
@@ -202,7 +203,7 @@ private enum DiceGeometry {
 
         let rim = SCNLight()
         rim.type = .directional
-        rim.intensity = 360
+        rim.intensity = 300
         rim.color = warmKey
         let rimNode = SCNNode()
         rimNode.light = rim
@@ -211,7 +212,7 @@ private enum DiceGeometry {
 
         let ambient = SCNLight()
         ambient.type = .ambient
-        ambient.intensity = 250
+        ambient.intensity = 210
         ambient.color = UIColor(white: 0.58, alpha: 1)
         let ambientNode = SCNNode()
         ambientNode.light = ambient

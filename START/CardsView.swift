@@ -57,6 +57,14 @@ struct CardsView: View {
         PlayingCardStyle(rawValue: selectedStyleRawValue) ?? .classic
     }
 
+    private var captureCardStyle: PlayingCardStyle? {
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-capture-cards-casino") { return .casino }
+        if arguments.contains("-capture-cards-vintage") { return .vintage }
+        if arguments.contains("-capture-cards") { return .classic }
+        return nil
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -146,8 +154,8 @@ struct CardsView: View {
                 selectedStyleRawValue = PlayingCardStyle.classic.rawValue
                 showDeckBrowser = true
             }
-            if ProcessInfo.processInfo.arguments.contains("-capture-cards") {
-                selectedStyleRawValue = PlayingCardStyle.classic.rawValue
+            if let captureCardStyle {
+                selectedStyleRawValue = captureCardStyle.rawValue
                 if draws.isEmpty { deal() }
             }
         }
@@ -533,6 +541,15 @@ private struct PlayingCardFaceView: View {
         RoundedRectangle(cornerRadius: width * 0.14)
             .fill(LinearGradient(colors: style.paperColors, startPoint: .topLeading, endPoint: .bottomTrailing))
             .overlay {
+                CardPaperGrain(ink: ink)
+                    .clipShape(RoundedRectangle(cornerRadius: width * 0.14))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: width * 0.14)
+                    .stroke(style.ornament.opacity(0.34), lineWidth: 0.55)
+                    .padding(width * 0.055)
+            }
+            .overlay {
                 VStack(alignment: .leading, spacing: 0) {
                     cornerIndex
                     Spacer(minLength: 2)
@@ -609,14 +626,6 @@ private struct CourtCardArt: View {
     let width: CGFloat
 
     private var ink: Color { card.isRed ? Color(red: 0.78, green: 0.10, blue: 0.14) : Color(red: 0.10, green: 0.12, blue: 0.14) }
-    private var emblem: String {
-        switch card.rank {
-        case 11: return "sparkles"
-        case 12: return "crown.fill"
-        default: return "star.fill"
-        }
-    }
-
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -627,19 +636,146 @@ private struct CourtCardArt: View {
                     .fill(style.ornament.opacity(0.10))
                     .overlay(Circle().stroke(style.ornament.opacity(0.42), lineWidth: 0.7))
                     .frame(width: min(width * 0.52, geometry.size.height * 0.86))
-                VStack(spacing: -3) {
-                    Image(systemName: emblem)
-                        .font(.system(size: width * 0.13, weight: .semibold))
-                        .foregroundColor(style.ornament)
-                    Image(systemName: "person.fill")
-                        .font(.system(size: width * 0.31, weight: .medium))
-                        .foregroundColor(ink.opacity(0.88))
-                    Text(card.suit)
-                        .font(.system(size: width * 0.16, weight: .bold, design: .serif))
-                        .foregroundColor(ink)
-                }
+                CourtPortrait(
+                    rank: card.rank,
+                    ink: ink,
+                    ornament: style.ornament,
+                    paper: style.paperColors[0]
+                )
+                Text(card.suit)
+                    .font(.system(size: width * 0.16, weight: .black, design: .serif))
+                    .foregroundColor(ink)
+                    .offset(y: geometry.size.height * 0.37)
             }
         }
+    }
+}
+
+private struct CardPaperGrain: View {
+    let ink: Color
+
+    var body: some View {
+        Canvas { context, size in
+            for fiber in 0..<72 {
+                let x = CGFloat((fiber * 37 + 11) % 101) / 101 * size.width
+                let y = CGFloat((fiber * 61 + 7) % 97) / 97 * size.height
+                let length = CGFloat(2 + fiber % 7)
+                var grain = Path()
+                grain.move(to: CGPoint(x: x, y: y))
+                grain.addLine(to: CGPoint(x: min(size.width, x + length), y: y + 0.35))
+                context.stroke(grain, with: .color(ink.opacity(0.055)), lineWidth: 0.35)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct CourtPortrait: View {
+    let rank: Int
+    let ink: Color
+    let ornament: Color
+    let paper: Color
+
+    var body: some View {
+        Canvas { context, size in
+            let point: (CGFloat, CGFloat) -> CGPoint = { x, y in
+                CGPoint(x: size.width * x, y: size.height * y)
+            }
+            let head = CGRect(x: size.width * 0.39, y: size.height * 0.27, width: size.width * 0.22, height: size.height * 0.30)
+            let leftEar = CGRect(x: size.width * 0.35, y: size.height * 0.37, width: size.width * 0.075, height: size.height * 0.10)
+            let rightEar = CGRect(x: size.width * 0.575, y: size.height * 0.37, width: size.width * 0.075, height: size.height * 0.10)
+
+            var robe = Path()
+            robe.move(to: point(0.18, 0.92))
+            robe.addCurve(to: point(0.82, 0.92), control1: point(0.20, 0.62), control2: point(0.80, 0.62))
+            robe.addLine(to: point(0.69, 0.58))
+            robe.addLine(to: point(0.31, 0.58))
+            robe.closeSubpath()
+            context.fill(robe, with: .color(ornament.opacity(0.70)))
+            context.stroke(robe, with: .color(ink.opacity(0.88)), lineWidth: max(0.7, size.width * 0.012))
+
+            var stitching = context
+            stitching.clip(to: robe)
+            for row in 0..<9 {
+                let y = size.height * (0.65 + CGFloat(row) * 0.035)
+                var hatch = Path()
+                hatch.move(to: CGPoint(x: size.width * 0.22, y: y))
+                hatch.addLine(to: CGPoint(x: size.width * 0.78, y: y - size.height * 0.08))
+                stitching.stroke(hatch, with: .color(paper.opacity(0.40)), lineWidth: 0.45)
+            }
+
+            var neck = Path()
+            neck.addRoundedRect(in: CGRect(x: size.width * 0.45, y: size.height * 0.49, width: size.width * 0.10, height: size.height * 0.14), cornerSize: CGSize(width: size.width * 0.025, height: size.width * 0.025))
+            context.fill(neck, with: .color(paper))
+            context.stroke(neck, with: .color(ink.opacity(0.8)), lineWidth: 0.65)
+
+            context.fill(Path(ellipseIn: leftEar), with: .color(paper))
+            context.fill(Path(ellipseIn: rightEar), with: .color(paper))
+            context.fill(Path(ellipseIn: head), with: .color(paper))
+            context.stroke(Path(ellipseIn: head), with: .color(ink), lineWidth: max(0.7, size.width * 0.012))
+
+            var hair = Path()
+            hair.move(to: point(0.38, 0.40))
+            hair.addCurve(to: point(0.62, 0.40), control1: point(0.35, 0.16), control2: point(0.65, 0.16))
+            hair.addLine(to: point(0.59, 0.34))
+            hair.addCurve(to: point(0.41, 0.34), control1: point(0.55, 0.25), control2: point(0.45, 0.25))
+            hair.closeSubpath()
+            context.fill(hair, with: .color(ink))
+
+            for eyeX in [CGFloat(0.45), 0.55] {
+                let eye = CGRect(x: size.width * eyeX - size.width * 0.012, y: size.height * 0.40, width: size.width * 0.024, height: size.height * 0.025)
+                context.fill(Path(ellipseIn: eye), with: .color(ink))
+            }
+            var nose = Path()
+            nose.move(to: point(0.50, 0.42))
+            nose.addLine(to: point(0.48, 0.48))
+            nose.addLine(to: point(0.51, 0.49))
+            context.stroke(nose, with: .color(ink.opacity(0.72)), lineWidth: 0.6)
+
+            if rank == 11 {
+                var cap = Path()
+                cap.move(to: point(0.35, 0.31))
+                cap.addQuadCurve(to: point(0.64, 0.30), control: point(0.49, 0.18))
+                cap.addLine(to: point(0.61, 0.34))
+                cap.addLine(to: point(0.38, 0.36))
+                cap.closeSubpath()
+                context.fill(cap, with: .color(ornament))
+                var feather = Path()
+                feather.move(to: point(0.56, 0.23))
+                feather.addCurve(to: point(0.78, 0.12), control1: point(0.65, 0.10), control2: point(0.75, 0.10))
+                feather.addCurve(to: point(0.64, 0.29), control1: point(0.81, 0.21), control2: point(0.72, 0.25))
+                context.stroke(feather, with: .color(ink), lineWidth: max(1, size.width * 0.018))
+            } else {
+                var crown = Path()
+                crown.move(to: point(0.34, 0.30))
+                crown.addLine(to: point(0.36, 0.14))
+                crown.addLine(to: point(0.44, 0.23))
+                crown.addLine(to: point(0.50, rank == 13 ? 0.10 : 0.17))
+                crown.addLine(to: point(0.57, 0.23))
+                crown.addLine(to: point(0.65, 0.14))
+                crown.addLine(to: point(0.67, 0.30))
+                crown.closeSubpath()
+                context.fill(crown, with: .color(ornament))
+                context.stroke(crown, with: .color(ink), lineWidth: 0.7)
+                if rank == 13 {
+                    var beard = Path()
+                    beard.move(to: point(0.39, 0.50))
+                    beard.addQuadCurve(to: point(0.61, 0.50), control: point(0.50, 0.66))
+                    beard.addLine(to: point(0.50, 0.65))
+                    beard.closeSubpath()
+                    context.fill(beard, with: .color(ink.opacity(0.88)))
+                    context.stroke(beard, with: .color(ornament), lineWidth: 0.65)
+                }
+            }
+
+            var collar = Path()
+            collar.move(to: point(0.40, 0.58))
+            collar.addLine(to: point(0.50, 0.69))
+            collar.addLine(to: point(0.60, 0.58))
+            context.stroke(collar, with: .color(paper), lineWidth: max(1, size.width * 0.025))
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -655,6 +791,8 @@ private struct PlayingCardBackView: View {
             .overlay(RoundedRectangle(cornerRadius: width * 0.14).stroke(style.ornament.opacity(0.82), lineWidth: 0.9).padding(width * 0.105))
             .overlay {
                 ZStack {
+                    CardBackPattern(style: style)
+                        .padding(width * 0.18)
                     RoundedRectangle(cornerRadius: width * 0.08)
                         .stroke(style.ornament.opacity(0.26), lineWidth: 0.8)
                         .padding(width * 0.18)
@@ -676,6 +814,77 @@ private struct PlayingCardBackView: View {
             .frame(width: width, height: height)
             .shadow(color: .black.opacity(0.42), radius: width * 0.09, x: 0, y: width * 0.07)
             .accessibilityHidden(true)
+    }
+}
+
+private struct CardBackPattern: View {
+    let style: PlayingCardStyle
+
+    var body: some View {
+        Canvas { context, size in
+            let ink = style.ornament.opacity(0.38)
+            switch style {
+            case .classic:
+                for row in 0..<7 {
+                    for column in 0..<5 {
+                        let center = CGPoint(
+                            x: size.width * (CGFloat(column) + 0.5 + (row.isMultiple(of: 2) ? 0 : 0.5)) / 5,
+                            y: size.height * (CGFloat(row) + 0.5) / 7
+                        )
+                        let radius = min(size.width / 18, size.height / 25)
+                        var diamond = Path()
+                        diamond.move(to: CGPoint(x: center.x, y: center.y - radius))
+                        diamond.addLine(to: CGPoint(x: center.x + radius, y: center.y))
+                        diamond.addLine(to: CGPoint(x: center.x, y: center.y + radius))
+                        diamond.addLine(to: CGPoint(x: center.x - radius, y: center.y))
+                        diamond.closeSubpath()
+                        context.stroke(diamond, with: .color(ink), lineWidth: 0.65)
+                    }
+                }
+            case .casino:
+                let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                for ring in 1...4 {
+                    let radius = CGFloat(ring) * min(size.width, size.height) * 0.085
+                    context.stroke(
+                        Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)),
+                        with: .color(ink),
+                        lineWidth: ring.isMultiple(of: 2) ? 0.9 : 0.55
+                    )
+                }
+                for ray in 0..<20 {
+                    let angle = Double(ray) * Double.pi * 2 / 20
+                    let dx = CGFloat(cos(angle))
+                    let dy = CGFloat(sin(angle))
+                    let inner = min(size.width, size.height) * 0.13
+                    let outer = min(size.width, size.height) * 0.46
+                    var line = Path()
+                    line.move(to: CGPoint(x: center.x + dx * inner, y: center.y + dy * inner))
+                    line.addLine(to: CGPoint(x: center.x + dx * outer, y: center.y + dy * outer))
+                    context.stroke(line, with: .color(ink.opacity(0.68)), lineWidth: ray.isMultiple(of: 2) ? 0.8 : 0.45)
+                }
+            case .vintage:
+                for row in 0..<8 {
+                    let y = size.height * CGFloat(row) / 8
+                    var wave = Path()
+                    wave.move(to: CGPoint(x: 0, y: y))
+                    wave.addCurve(
+                        to: CGPoint(x: size.width, y: y),
+                        control1: CGPoint(x: size.width * 0.30, y: y - size.height * 0.10),
+                        control2: CGPoint(x: size.width * 0.70, y: y + size.height * 0.10)
+                    )
+                    context.stroke(wave, with: .color(ink), lineWidth: 0.6)
+                }
+                for column in 0..<5 {
+                    let x = size.width * CGFloat(column) / 5
+                    var line = Path()
+                    line.move(to: CGPoint(x: x, y: 0))
+                    line.addLine(to: CGPoint(x: x + size.width * 0.20, y: size.height))
+                    context.stroke(line, with: .color(ink.opacity(0.62)), lineWidth: 0.55)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
